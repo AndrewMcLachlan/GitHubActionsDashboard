@@ -21,7 +21,16 @@ export const List = () => {
 
     const { data: repositories, isLoading, isError, error } = useWorkflowRuns(request, branchFilter);
 
-    
+    const list = repositories?.flatMap(repo => repo.workflows?.flatMap(workflow => workflow.runs?.flatMap(run => ({
+        repo: repo,
+        workflow: workflow,
+        run: run,
+    })))) ?? [];
+
+    list?.sort((a, b) => {
+        return a!.run.details.updatedAt! > b!.run.details.updatedAt! ? -1 : 1;
+    });
+
     return (
         <table className="workflow-run-table">
             <thead>
@@ -39,14 +48,14 @@ export const List = () => {
                 {isLoading && <Spinner />}
                 {isError && <tr><td colSpan={6}>Error loading build info: {error.message}</td></tr>}
                 {(!isLoading && (!repositories || repositories.length === 0)) && <tr><td colSpan={6}>No workflows found.</td></tr>}
-                {repositories && repositories.map((repository) => {
-                    return repository.workflows?.map(workflow => {
-                        return workflow.runs?.map(run => (
-                            <WorkflowRunRow repository={repository} workflow={workflow} run={run} key={run.details.id} />
-                        ))
-                    })
-                })
-                }
+                {list.map((item) => (
+                    <WorkflowRunRow
+                        key={item!.run.details.id}
+                        repository={item!.repo}
+                        workflow={item!.workflow}
+                        run={item!.run}
+                    />
+                ))}
             </tbody>
         </table>
     )
