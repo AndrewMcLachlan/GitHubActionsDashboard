@@ -59,8 +59,6 @@ jobs:
       run: npm run build --prefix src/GitHubActionsDashboard.App
     - name: Copy App
       run: cp -r src/GitHubActionsDashboard.App/dist ${{ github.workspace }}/publish/wwwroot
-    - name: Publish WebJob
-      run: 'dotnet publish src/GitHubActionsDashboard.Jobs/GitHubActionsDashboard.Jobs.csproj --runtime win-x64 --no-self-contained --output ${{ github.workspace }}/publish/App_Data/jobs/continuous/Jobs --configuration Release --p:Version=${{ steps.set-version-number.outputs.version }} --p:FileVersion=${{ steps.set-version-number.outputs.version }} --no-restore'
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
