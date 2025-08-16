@@ -2,14 +2,17 @@
     background-color: cornflowerblue;
 
     &.red {
-        background-color: rgba(from var(--red) r g b / 0.8);
+        background-color: hsl(from var(--red) h calc(s / 4) calc(l / 1.5));
+        color: hsl(from var(--red) h s calc(l *  1.5));
     }
 
     &.green {
-        background-color: rgba(from var(--green) r g b / 0.8);
+        background-color: hsl(from var(--green) h calc(s / 4) calc(l / 1.5));
+        color: hsl(from var(--green) h s calc(l * 1.5));
     }
 
     &.amber {
-        background-color: rgba(from var(--amber) r g b / 0.8);
+        background-color: hsl(from var(--amber) h calc(s / 4) calc(l / 1.5));
+        color: hsl(from var(--amber) h s calc(l * 1.5));
     }
 }
