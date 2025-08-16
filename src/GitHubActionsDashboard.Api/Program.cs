@@ -147,10 +147,9 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-
 app.UseSession();
 app.UseDefaultFiles();
-app.MapStaticAssets();
+app.UseStaticFiles();
 
 app.MapOpenApi();
 
@@ -163,6 +162,8 @@ api.MapGet("repositories", RepositoriesHandler.Handle);
 api.MapGet("repositories/grouped", GroupedRepositoriesHandler.Handle);
 api.MapPost("workflows", WorkflowsHandler.Handle);
 api.MapPost("workflows/runs", WorkflowRunsHandler.Handle);
+
+app.UseSecurityHeaders();
 
 app.MapFallbackToFile("/index.html");
 
