@@ -39,7 +39,7 @@ jobs:
         project: 'src/GitHubActionsDashboard.Api'
         version-property-name: 'Version'
     - name: Restore dependencies
-      run: dotnet restore Asm.GitHubActionsDashboard.slnx
+      run: dotnet restore GitHubActionsDashboard.slnx
     - name: Setup node and npm
       uses: actions/setup-node@v4
       with:
