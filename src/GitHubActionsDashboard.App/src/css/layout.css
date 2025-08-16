@@ -29,3 +29,14 @@ article {
     display: flex;
     flex-direction: column;
 }
+
+h1 a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    height: 3.5rem;
+    width: 3.5rem;
+}

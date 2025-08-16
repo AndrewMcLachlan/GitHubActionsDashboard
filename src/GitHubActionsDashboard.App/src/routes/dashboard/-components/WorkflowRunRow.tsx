@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import type { RepositoryModel, WorkflowModel, WorkflowRunModel } from "../../../api";
+import { Badge } from "./Badge";
 
 export const WorkflowRunRow: React.FC<WorkflowRunRowProps> = ({ repository, workflow, run }) => {
 
@@ -10,12 +11,12 @@ export const WorkflowRunRow: React.FC<WorkflowRunRowProps> = ({ repository, work
 
     return (
         <tr key={`${repository.details.owner?.name ?? repository.details.owner?.login}|${repository.details.name}`}>
+            <td><Badge className={run.ragStatus?.toLowerCase()}>{run.details.conclusion?.stringValue}</Badge></td>
+            <td>{workflow.details.name}</td>
+            <td><Badge>{run.details.headBranch}</Badge></td>
+            <td title={DateTime.fromISO(run.details.updatedAt!).toFormat('yyyy-MM-dd HH:mm:ss')}>{timeAgo}</td>
             <td>{repository.details.owner?.name ?? repository.details.owner?.login}</td>
             <td>{repository.details.name}</td>
-            <td>{workflow.details.name}</td>
-            <td>{run.details.headBranch}</td>
-            <td>{run.details.conclusion?.stringValue}</td>
-            <td title={DateTime.fromISO(run.details.updatedAt!).toFormat('yyyy-MM-dd HH:mm:ss')}>{timeAgo}</td>
                 <td><a href={repository.details.htmlUrl!} target="_blank" rel="noopener noreferrer">View Run</a></td>
         </tr>
     );

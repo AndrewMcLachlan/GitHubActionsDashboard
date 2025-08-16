@@ -1,0 +1,7 @@
+@scope (.workflow-run-table) {
+    th, td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+}

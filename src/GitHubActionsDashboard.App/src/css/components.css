@@ -8,5 +8,6 @@
 @import "./components/spinner.css";
 @import "./components/workflow-card.css";
 @import "./components/workflow-list.css";
-@import "./components/workflow-run-list.css";
 @import "./components/workflow-run-card.css";
+@import "./components/workflow-run-list.css";
+@import "./components/workflow-run-table.css";

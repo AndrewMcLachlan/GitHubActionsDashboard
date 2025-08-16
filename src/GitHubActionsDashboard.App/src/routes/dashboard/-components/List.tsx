@@ -23,15 +23,15 @@ export const List = () => {
 
     
     return (
-        <table>
+        <table className="workflow-run-table">
             <thead>
                 <tr>
-                    <th>Owner</th>
-                    <th>Repository</th>
                     <th>Workflow</th>
                     <th>Branch</th>
                     <th>Status</th>
                     <th>Run</th>
+                    <th>Owner</th>
+                    <th>Repository</th>
                     <th></th>
                 </tr>
             </thead>

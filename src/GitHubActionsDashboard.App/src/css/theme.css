@@ -1,15 +1,3 @@
-.red {
-    color: var(--red);
-}
-
-.green {
-    color: var(--green);
-}
-
-.amber {
-    color: var(--amber);
-}
-
 h1 {
     padding-left: 1r;
 }

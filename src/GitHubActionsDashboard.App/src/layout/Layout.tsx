@@ -7,7 +7,7 @@ export const Layout : React.FC<PropsWithChildren> = ({children}) => {
     return (
         <div className="layout">
             <header>
-                <h1><Link to="/dashboard">GitHub Actions Dashboard</Link></h1>
+                <h1><Link to="/dashboard"><img src="/logo-white.svg" className="logo" />GitHub Actions Dashboard</Link></h1>
                 <nav className="top-nav">
                     <ul>
                         <li><Link to="/settings"><Icon icon={Cog} /></Link></li>

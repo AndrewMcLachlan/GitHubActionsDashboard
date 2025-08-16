@@ -1,3 +1,15 @@
 @scope (.badge) {
-    background-color: cornflowerblue;;
+    background-color: cornflowerblue;
+
+    &.red {
+        background-color: rgba(from var(--red) r g b / 0.8);
+    }
+
+    &.green {
+        background-color: rgba(from var(--green) r g b / 0.8);
+    }
+
+    &.amber {
+        background-color: rgba(from var(--amber) r g b / 0.8);
+    }
 }
