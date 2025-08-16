@@ -1,0 +1,20 @@
+@scope (.rag-status)
+{
+    background-color: aliceblue;
+    display: block;
+    border-radius: 8px;
+    height: 16px;
+    width: 16px;
+
+    &.red {
+        background-color: var(--red);
+    }
+
+    &.green {
+        background-color: var(--green);
+    }
+
+    &.amber {
+        background-color: var(--amber);
+    }
+}

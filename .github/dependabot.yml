@@ -1,0 +1,62 @@
+version: 2
+registries:
+  npm-github:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{ secrets.CROSS_REPO_PACKAGE_TOKEN }}
+  nuget-github:
+    type: nuget-feed
+    url: https://nuget.pkg.github.com/AndrewMcLachlan/index.json
+    token: ${{ secrets.CROSS_REPO_PACKAGE_TOKEN }}
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/src/GitHubActionsDashboard.App"
+    schedule:
+      interval: "weekly"
+      timezone: Australia/Brisbane
+      day: tuesday
+      time: "06:00"
+    reviewers:
+      - AndrewMcLachlan
+    groups:
+      dev-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        dependency-type: "development"
+      prod-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        dependency-type: "production"
+    open-pull-requests-limit: 20
+    registries: "*"
+
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      timezone: "Australia/Brisbane"
+      day: tuesday
+      time: "06:00"
+    reviewers:
+      - AndrewMcLachlan
+    groups:
+      version-updates:
+        applies-to: version-updates
+        patterns:
+          - "*"
+    open-pull-requests-limit: 20
+    registries: "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      timezone: "Australia/Brisbane"
+      day: tuesday
+      time: "06:00"
+    reviewers:
+      - AndrewMcLachlan
+    open-pull-requests-limit: 20

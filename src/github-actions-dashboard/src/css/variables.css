@@ -1,0 +1,15 @@
+:root {
+    --red: red;
+    --green: green;
+    --amber: rgb(255, 191, 0);
+
+    --card-bg: #3a3a4a;
+    --primary: #646cff;
+
+    --h2-size: 2rem;
+
+    --bs-border-color: #3a3a4a;
+    --bs-heading-color: rgba(255, 255, 255, 0.87);
+    --bs-body-color: rgba(255, 255, 255, 0.87);
+    color: rgba(255, 255, 255, 0.87);
+}

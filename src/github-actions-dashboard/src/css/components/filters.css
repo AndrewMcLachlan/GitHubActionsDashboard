@@ -1,0 +1,18 @@
+@scope (.filters) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem;
+    align-items: center;
+    
+    .branch-filter {
+        flex: 1;
+        min-width: 200px;
+        max-width: 400px;
+    }
+    
+    .close-badge {
+        margin-left: 0.5rem;
+        cursor: pointer;
+    }
+}

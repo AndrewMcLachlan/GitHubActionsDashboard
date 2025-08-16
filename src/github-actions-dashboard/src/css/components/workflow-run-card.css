@@ -1,0 +1,14 @@
+@scope (.workflow-run-card) {
+ 
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    place-items: center;
+    background-color: lab(from var(--card-bg) l a b / 0.5 );
+    border-radius: 5px;
+
+    .conclusion {
+        width: 5rem;
+    }
+
+}

@@ -1,0 +1,25 @@
+.red {
+    color: var(--red);
+}
+
+.green {
+    color: var(--green);
+}
+
+.amber {
+    color: var(--amber);
+}
+
+h1 {
+    padding-left: 1r;
+}
+
+h2 {
+    font-weight: 500;
+    letter-spacing: normal;
+}
+
+h3 {
+    font-weight: 300;
+    letter-spacing: normal;
+}

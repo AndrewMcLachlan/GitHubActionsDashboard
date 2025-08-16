@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/github-actions-dashboard/GitHubActionsDashboard.App.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="src/GitHubActionsDashboard.Api/GitHubActionsDashboard.Api.csproj" />
+</Solution>
