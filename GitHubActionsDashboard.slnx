@@ -3,7 +3,7 @@
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/build.yml" />
   </Folder>
-  <Project Path="src/github-actions-dashboard/GitHubActionsDashboard.App.esproj">
+  <Project Path="src/GitHubActionsDashboard.App/GitHubActionsDashboard.App.esproj">
     <Build />
     <Deploy />
   </Project>

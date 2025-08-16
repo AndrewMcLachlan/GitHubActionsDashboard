@@ -8,7 +8,7 @@
     <UserSecretsId>85c57c4c-5753-4390-84d0-6cf381e7d1c3</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
-    <SpaRoot>..\github-actions-dashboard</SpaRoot>
+    <SpaRoot>..\GithubActionsDashboard.App</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>http://localhost:3010</SpaProxyServerUrl>
   </PropertyGroup>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\github-actions-dashboard\GitHubActionsDashboard.App.esproj">
+    <ProjectReference Include="..\GithubActionsDashboard.App\GitHubActionsDashboard.App.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
