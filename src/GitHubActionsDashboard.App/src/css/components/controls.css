@@ -1,0 +1,22 @@
+@scope (.controls) {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    .badge {
+        --bs-badge-font-size: 0.9rem;
+        --bs-badge-padding-x: 0.7rem;
+        --bs-badge-padding-y: 0.5rem;
+    }
+
+    .views {
+        display: flex;
+        gap: 1rem;
+
+        svg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    }
+}

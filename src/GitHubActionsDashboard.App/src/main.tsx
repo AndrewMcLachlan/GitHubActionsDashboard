@@ -7,14 +7,14 @@ import { configureInterceptors } from "./utils/axiosInterceptors.ts"
 
 
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faArrowUpRightFromSquare, faChevronRight, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUpRightFromSquare, faBarsStaggered, faChevronRight, faListUl, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { routeTree } from './routeTree.gen'
 import { Spinner } from "./components/Spinner"
 import { LinkProvider } from "@andrewmclachlan/moo-ds"
 import { NavLnk } from "./components/NavLink"
 
-library.add(faArrowUpRightFromSquare, faChevronRight, faTimesCircle);
+library.add(faArrowUpRightFromSquare, faBarsStaggered, faChevronRight, faListUl, faTimesCircle);
 
 const router = createRouter({
     routeTree,
