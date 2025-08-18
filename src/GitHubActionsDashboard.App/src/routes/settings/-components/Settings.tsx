@@ -10,8 +10,6 @@ export const Settings = () => {
     const { data: repositories } = useSelectedRepositories();
     const { mutate } = useUpdateSelectedRepositories();
 
-    console.log("Selected repositories:", repositories);
-
     const handleRepositoryChange = (repo: SelectedRepository) => {
 
         mutate(repositories.some(r => equals(r, repo)) ?

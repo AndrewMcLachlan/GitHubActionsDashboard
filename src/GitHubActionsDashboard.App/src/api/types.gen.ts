@@ -67,8 +67,6 @@ export type GitReference2 = {
     repository?: unknown;
 };
 
-export type ItemState = number;
-
 export type Label = {
     id?: number;
     url?: string | null;
@@ -87,10 +85,6 @@ export type LicenseMetadata = {
     url?: string | null;
     featured?: boolean;
 } | null;
-
-export type LockReason = number;
-
-export type MergeableState = number;
 
 export type Milestone = {
     url?: string | null;
@@ -114,20 +108,11 @@ export type NullableOfAccountType = number | null;
 
 export type NullableOfRepositoryVisibility = number | null;
 
-export type NullableOfStringEnumOfLockReason = {
-    stringValue?: string | null;
-    value?: LockReason;
-} | null;
+export type NullableOfStringEnumOfLockReason = string | null;
 
-export type NullableOfStringEnumOfMergeableState = {
-    stringValue?: string | null;
-    value?: MergeableState;
-} | null;
+export type NullableOfStringEnumOfMergeableState = string | null;
 
-export type NullableOfStringEnumOfWorkflowRunConclusion = {
-    stringValue?: string | null;
-    value?: WorkflowRunConclusion;
-} | null;
+export type NullableOfStringEnumOfWorkflowRunConclusion = string | null;
 
 export type Organization = {
     billingAddress?: string | null;
@@ -368,30 +353,15 @@ export type SecurityAndAnalysis = {
     secretScanningValidityChecks?: SecretScanningValidityChecks;
 } | null;
 
-export type StringEnumOfItemState = {
-    stringValue?: string | null;
-    value?: ItemState;
-};
+export type StringEnumOfItemState = string;
 
-export type StringEnumOfTeamPrivacy = {
-    stringValue?: string | null;
-    value?: TeamPrivacy;
-};
+export type StringEnumOfTeamPrivacy = string;
 
-export type StringEnumOfVerificationReason = {
-    stringValue?: string | null;
-    value?: VerificationReason;
-};
+export type StringEnumOfVerificationReason = string;
 
-export type StringEnumOfWorkflowRunStatus = {
-    stringValue?: string | null;
-    value?: WorkflowRunStatus;
-};
+export type StringEnumOfWorkflowRunStatus = string;
 
-export type StringEnumOfWorkflowState = {
-    stringValue?: string | null;
-    value?: WorkflowState;
-};
+export type StringEnumOfWorkflowState = string;
 
 export type Team = {
     url?: string | null;
@@ -410,8 +380,6 @@ export type Team = {
     parent?: Team;
     ldapDistinguishedName?: string | null;
 };
-
-export type TeamPrivacy = number;
 
 export type TeamRepositoryPermissions = {
     pull?: boolean;
@@ -496,8 +464,6 @@ export type Verification = {
     payload?: string | null;
 } | null;
 
-export type VerificationReason = number;
-
 export type Workflow = {
     id?: number;
     nodeId?: string | null;
@@ -563,16 +529,10 @@ export type WorkflowRun = {
     headRepositoryId?: number;
 };
 
-export type WorkflowRunConclusion = number;
-
 export type WorkflowRunModel = {
     details: WorkflowRun;
     ragStatus?: RagStatus;
 };
-
-export type WorkflowRunStatus = number;
-
-export type WorkflowState = number;
 
 export type GetRepositoriesData = {
     body?: never;

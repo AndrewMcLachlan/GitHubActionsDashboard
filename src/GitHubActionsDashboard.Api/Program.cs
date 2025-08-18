@@ -3,35 +3,31 @@ using System.Text.Json.Serialization;
 using GitHubActionsDashboard.Api.Exceptions;
 using GitHubActionsDashboard.Api.Handlers;
 using GitHubActionsDashboard.Api.Models;
+using GitHubActionsDashboard.Api.OpenApi;
+using GitHubActionsDashboard.Api.Serialisation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Octokit;
 
 const string ApiPrefix = "/api";
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+
+    // Add converters for Octokit StringEnum types
+    options.SerializerOptions.Converters.Add(new StringEnumJsonConverter<WorkflowState>());
+    options.SerializerOptions.Converters.Add(new StringEnumJsonConverter<WorkflowRunStatus>());
+    options.SerializerOptions.Converters.Add(new StringEnumJsonConverter<WorkflowRunConclusion>());
+    options.SerializerOptions.Converters.Add(new StringEnumJsonConverter<ItemState>());
+    options.SerializerOptions.Converters.Add(new StringEnumJsonConverter<RepositoryVisibility>());
+    options.SerializerOptions.Converters.Add(new StringEnumJsonConverter<MergeableState>());
+
 });
 
 builder.Services.AddHttpContextAccessor();
-
-/*builder.Services.AddHttpClient<IGitHubService, GitHubService>((services, options) =>
-{
-    var context = services.GetRequiredService<IHttpContextAccessor>().HttpContext ?? throw new InvalidOperationException("HttpContext is not available. Ensure IHttpContextAccessor is registered and used correctly.");
-    var token = context.Session.GetString("github_access_token");
-    var user = context.Session.GetString("github_user");
-
-    if (String.IsNullOrEmpty(token)) throw new UnauthorizedException();
-
-    options.BaseAddress = new Uri("https://api.github.com/");
-    options.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    options.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("GitHubActionsDashboard", "0.1"));
-    options.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-    options.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-});*/
 
 builder.Services.AddTransient<IGitHubClient, GitHubClient>(services =>
 {
@@ -50,6 +46,8 @@ builder.Services.AddTransient<IGitHubClient, GitHubClient>(services =>
 
 builder.Services.AddOpenApi("v1", options =>
 {
+    //options.AddDocumentTransformer<StringEnumSchemaTransformer>();
+    options.AddSchemaTransformer<StringEnumSchemaTransformer>();
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
         // Remove /api prefix from all paths
@@ -126,24 +124,6 @@ builder.Services.Configure<JsonOptions>(options =>
 });
 
 var app = builder.Build();
-
-/*app.Use((context, next) =>
-{
-    try
-    {
-        return next();
-    }
-    catch (UnauthorizedException)
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
-    }
-    catch (Exception ex)
-    {
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        return context.Response.WriteAsync($"An unexpected error occurred: {ex.Message}");
-    }
-});*/
 
 app.UseExceptionHandler();
 

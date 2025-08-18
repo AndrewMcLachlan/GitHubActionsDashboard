@@ -27,7 +27,7 @@ export const Dashboard = () => {
     }
 
     return (
-<>
+        <>
             {isLoading && <Spinner />}
             {(!isLoading && (!repositories || repositories.length === 0)) && <p>No workflows found.</p>}
             {repositories && <RepositoryList repositories={repositories} />}

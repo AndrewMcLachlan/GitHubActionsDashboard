@@ -14,13 +14,13 @@ export const WorkflowRunCard: React.FC<WorkflowRunCardProps> = ({ workflowRun })
     return (
         <section className="workflow-run-card">
             <RagStatus ragStatus={workflowRun.ragStatus} />
-            <span className="conclusion">{workflowRun.details.conclusion?.stringValue}</span>
+            <span className="conclusion">{workflowRun.details.conclusion}</span>
             <Badge>{workflowRun.details.headBranch}</Badge>
             <span>{workflowRun.details.event}</span>
             <span>{workflowRun.details.runNumber}</span>
             <span>{workflowRun.details.triggeringActor?.name ?? workflowRun.details.triggeringActor?.login}</span>
 
-            <span className={`run-status ${workflowRun.details.status?.stringValue}`}>{workflowRun.details.status?.stringValue}</span>
+            <span className={`run-status ${workflowRun.details.status}`}>{workflowRun.details.status}</span>
             <span className="run-timestamp" title={DateTime.fromISO(workflowRun.details.updatedAt!).toFormat('yyyy-MM-dd HH:mm:ss')}>{timeAgo}</span>
             <span><a href={workflowRun.details.htmlUrl!} target="_blank"><Icon icon="arrow-up-right-from-square" /></a></span>
         </section>
