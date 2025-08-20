@@ -5,6 +5,7 @@ using GitHubActionsDashboard.Api.Handlers;
 using GitHubActionsDashboard.Api.Models;
 using GitHubActionsDashboard.Api.OpenApi;
 using GitHubActionsDashboard.Api.Serialisation;
+using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
 using Octokit;
@@ -58,6 +59,9 @@ builder.Services.AddScoped<Octokit.GraphQL.Connection>(services =>
 
     return connection;
 });
+
+builder.Services.AddScoped<IGitHubService, GitHubService>();
+builder.Services.AddScoped<IGraphQLService, GraphQLService>();
 
 builder.Services.AddOpenApi("v1", options =>
 {
@@ -137,6 +141,7 @@ builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter<RagStatus>());
 });
+
 
 var app = builder.Build();
 

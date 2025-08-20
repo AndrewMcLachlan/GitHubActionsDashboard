@@ -1,4 +1,6 @@
-﻿using GitHubActionsDashboard.Api.Models.Dashboard;
+﻿using System.Diagnostics;
+using GitHubActionsDashboard.Api.Models.Dashboard;
+using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Octokit;
@@ -8,7 +10,7 @@ namespace GitHubActionsDashboard.Api.Handlers;
 
 public static class WorkflowRunsHandler
 {
-    public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromServices] Octokit.GraphQL.Connection graphQlConnection, [FromBody] CrossRepositoryRequest request)
+    public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromServices] IGitHubService gitHubService, [FromBody] CrossRepositoryRequest request, CancellationToken cancellationToken)
     {
         IEnumerable<OwnerRepo> repos = request.Repositories.SelectMany(or => or.Value.Select(r => (or.Key, r)));
 
@@ -46,17 +48,19 @@ public static class WorkflowRunsHandler
                     branch = request.BranchFilters.First();
                 }
 
-                //runsTasks.Add(client.Actions.Workflows.Runs.List(repo.Owner.Login, repo.Name, new WorkflowRunsRequest
-                runsTasks.Add(client.Actions.Workflows.Runs.ListByWorkflow(repo.Owner.Name ?? repo.Owner.Login, repo.Name, workflow.Id, new WorkflowRunsRequest
-                {
-                    Branch = branch,
-                },
-                new ApiOptions
-                {
-                    PageCount = 1,
-                    PageSize = 20,
-                    StartPage = 1,
-                }));
+                runsTasks.Add(gitHubService.GetLastRunsAsync(repo.Owner.Login, repo.Name, workflow.Id, 20, branch, cancellationToken));
+
+                /* //runsTasks.Add(client.Actions.Workflows.Runs.List(repo.Owner.Login, repo.Name, new WorkflowRunsRequest
+                 runsTasks.Add(client.Actions.Workflows.Runs.ListByWorkflow(repo.Owner.Name ?? repo.Owner.Login, repo.Name, workflow.Id, new WorkflowRunsRequest
+                 {
+                     Branch = branch,
+                 },
+                 new ApiOptions
+                 {
+                     PageCount = 1,
+                     PageSize = 20,
+                     StartPage = 1,
+                 }));*/
             }
         }
 
@@ -70,6 +74,7 @@ public static class WorkflowRunsHandler
             foreach (var header in fex.HttpResponse.Headers)
             {
                 Console.WriteLine($"{header.Key}: {header.Value}");
+                Debug.WriteLine($"{header.Key}: {header.Value}");
             }
         }
 

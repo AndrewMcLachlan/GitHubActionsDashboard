@@ -1,10 +1,10 @@
 ﻿using GitHubActionsDashboard.Api.Models;
 using GitHubActionsDashboard.Api.Models.Dashboard;
+using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Octokit;
 using Octokit.GraphQL;
-using Octokit.GraphQL.Core;
 using CheckConclusionState = Octokit.GraphQL.Model.CheckConclusionState;
 using OwnerRepo = (string Owner, string Repository);
 
@@ -12,7 +12,7 @@ namespace GitHubActionsDashboard.Api.Handlers;
 
 public static class WorkflowsHandler
 {
-    public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromServices] Octokit.GraphQL.Connection connection, [FromBody] CrossRepositoryRequest request)
+    public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromServices] IGraphQLService graphQLService, [FromBody] CrossRepositoryRequest request, CancellationToken cancellationToken)
     {
         IEnumerable<OwnerRepo> repos = request.Repositories.SelectMany(or => or.Value.Select(r => (or.Key, r)));
 
@@ -37,52 +37,17 @@ public static class WorkflowsHandler
             workflows.Add(task.Key, [.. task.Value.Result.Workflows.OrderBy(w => w.Name)]);
         }
 
-        const string gql = @"query($ids:[ID!]!, $per:Int!){
-  nodes(ids:$ids){
-            ... on Workflow {
-                id name
-              runs(first:$per){
-                    nodes{ databaseId conclusion status headBranch createdAt }
-                }
-            }
-        }
-    }";
-
-        Arg<int> per = 20;
-
         foreach (var repo in workflows.Keys)
         {
-            var ids = workflows[repo].Select(w => new ID(w.NodeId)).ToList();
+            var ids = workflows[repo].Select(w => w.NodeId);
 
-            // nodes(ids:[ID!]!) { ... on Workflow { runs(first: $per) { nodes { ... } } } }
-            var query =
-            new Query()
-            .Nodes(ids)
-            .Select(n => n.Cast<Octokit.GraphQL.Core.QueryableValue<Octokit.GraphQL.Model.Workflow>>().Select(wf => new WorkflowWithRuns
-            {
-                Id = wf.Id,
-                Name = wf.Name,
-                Runs = wf.Runs(per, null, null, null, null).Nodes.Select(r => new RunDto
-                {
-                    DatabaseId = r.DatabaseId,
-                    RunNumber = r.RunNumber,
-                    Status = r.CheckSuite.Status,       // enum
-                    Conclusion = r.CheckSuite.Conclusion,   // enum
-                    HeadBranch = r.CheckSuite.Branch.Name,
-                    CreatedAt = r.CreatedAt,
-                    UpdatedAt = r.UpdatedAt,
-                    Url = r.Url
-                }).ToList()
-            }))
-            .Compile();
-
-            var result = await connection.Run(query);
+            var result = await graphQLService.GetWorkflowRuns(ids, cancellationToken);
 
             foreach (var workflowRepo in workflows)
             {
                 var runs = result
-                    .Where(wr => wr.Single().Id.ToString() == workflowRepo.Key.NodeId)
-                    .SelectMany(wr => wr.Single().Runs)
+                    .Where(wr => wr.Id.ToString() == workflowRepo.Key.NodeId)
+                    .SelectMany(wr => wr.Runs)
                     .ToList();
 
                 var conclusions = runs.GroupBy(r => r.HeadBranch).Select(rg => rg.OrderByDescending(r => r.UpdatedAt).First()).Select(r => r.Conclusion);
@@ -127,7 +92,7 @@ public record WorkflowWithRuns
 {
     public ID Id { get; init; }
     public string Name { get; init; } = "";
-    public List<RunDto> Runs { get; init; } = new();
+    public List<RunDto> Runs { get; init; } = [];
 }
 
 public record RunDto
