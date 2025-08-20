@@ -6,6 +6,13 @@ namespace GitHubActionsDashboard.Api.Handlers;
 
 public static class CallbackHandler
 {
+    /// <summary>
+    /// TODO: handle installs - http://localhost:3010/callback/github?code=48cb8c83cdda93f69f77&installation_id=81709900&setup_action=install
+    /// </summary>
+    /// <param name="http"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static async Task<IResult> Handle(HttpContext http, IConfiguration configuration)
     {
         string clientId = configuration.GetValue<string>("ClientId") ?? throw new InvalidOperationException("ClientId is missing");

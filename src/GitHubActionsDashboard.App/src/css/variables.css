@@ -1,6 +1,6 @@
 :root {
     --red: red;
-    --green: green;
+    --green: chartreuse;
     --amber: rgb(255, 191, 0);
 
     --card-bg: #3a3a4a;
@@ -8,8 +8,15 @@
 
     --h2-size: 2rem;
 
-    --bs-border-color: #3a3a4a;
-    --bs-heading-color: rgba(255, 255, 255, 0.87);
-    --bs-body-color: rgba(255, 255, 255, 0.87);
-    color: rgba(255, 255, 255, 0.87);
+    color:
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --green: green;
+        --bs-border-color: #3a3a4a;
+        --bs-heading-color: rgba(255, 255, 255, 0.87);
+        --bs-body-color: rgba(255, 255, 255, 0.87);
+        color: rgba(255, 255, 255, 0.87);
+    }
 }

@@ -13,6 +13,9 @@ const string ApiPrefix = "/api";
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -29,7 +32,7 @@ builder.Services.Configure<JsonOptions>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddTransient<IGitHubClient, GitHubClient>(services =>
+builder.Services.AddScoped<IGitHubClient, GitHubClient>(services =>
 {
     var context = services.GetRequiredService<IHttpContextAccessor>().HttpContext ?? throw new InvalidOperationException("HttpContext is not available. Ensure IHttpContextAccessor is registered and used correctly.");
     var token = context.Session.GetString("github_access_token");
@@ -42,6 +45,18 @@ builder.Services.AddTransient<IGitHubClient, GitHubClient>(services =>
     };
 
     return new GitHubClient(connection);
+});
+
+builder.Services.AddScoped<Octokit.GraphQL.Connection>(services =>
+{
+    var context = services.GetRequiredService<IHttpContextAccessor>().HttpContext ?? throw new InvalidOperationException("HttpContext is not available. Ensure IHttpContextAccessor is registered and used correctly.");
+    var token = context.Session.GetString("github_access_token");
+
+    if (String.IsNullOrEmpty(token)) throw new UnauthorizedException();
+
+    Octokit.GraphQL.Connection connection = new(new Octokit.GraphQL.ProductHeaderValue("GitHubActionsDashboard", "0.1"), token);
+
+    return connection;
 });
 
 builder.Services.AddOpenApi("v1", options =>

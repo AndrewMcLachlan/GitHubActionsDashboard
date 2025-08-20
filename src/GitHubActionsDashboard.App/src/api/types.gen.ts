@@ -479,8 +479,13 @@ export type Workflow = {
 };
 
 export type WorkflowModel = {
+    id?: number;
+    nodeId?: string;
+    name?: string;
+    htmlUrl?: string;
     details: Workflow;
     runs?: Array<WorkflowRunModel>;
+    runStatus?: RagStatus;
     overallStatus?: RagStatus;
 };
 
@@ -577,7 +582,7 @@ export type PostWorkflowsResponses = {
     /**
      * OK
      */
-    200: Array<Workflow>;
+    200: Array<RepositoryModel>;
 };
 
 export type PostWorkflowsResponse = PostWorkflowsResponses[keyof PostWorkflowsResponses];

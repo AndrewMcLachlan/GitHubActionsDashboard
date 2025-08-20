@@ -4,9 +4,31 @@ namespace GitHubActionsDashboard.Api.Models.Dashboard;
 
 public record WorkflowModel
 {
+    /// <summary>
+    /// The Id for this workflow.
+    /// </summary>
+    public long Id { get; private set; }
+
+    /// <summary>
+    /// GraphQL Node Id.
+    /// </summary>
+    public string NodeId { get; private set; }
+
+    /// <summary>
+    /// Name of the workflow.
+    /// </summary>
+    public string Name { get; private set; }
+
+    /// <summary>
+    /// The URL for the HTML view of this workflow.
+    /// </summary>
+    public string HtmlUrl { get; private set; }
+
     public required Workflow Details { get; init; }
 
     public IEnumerable<WorkflowRunModel> Runs { get; init; } = [];
+
+    public RagStatus RunStatus { get; init; }
 
     public RagStatus OverallStatus
     {

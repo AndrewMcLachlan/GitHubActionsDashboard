@@ -1,6 +1,7 @@
 import { useSelectedRepositories } from "../../../hooks/useSelectedRepositories";
 import { RepositoryList } from "./RepositoryList";
 import { useWorkflowRuns } from "../-hooks/useWorkflowRuns";
+import { useWorkflows } from "../-hooks/useWorkflows";
 import { Spinner } from "../../../components/Spinner";
 import { useDashboardContext } from "../-providers/DashboardProvider";
 
@@ -20,6 +21,7 @@ export const Dashboard = () => {
     const { branchFilter } = useDashboardContext();
 
     const { data: repositories, isLoading, isError, error } = useWorkflowRuns(request, branchFilter);
+    //const { data: repositories, isLoading, isError, error } = useWorkflows(request);
 
     if (isError) {
         console.error("Error fetching dashboard data:", error);

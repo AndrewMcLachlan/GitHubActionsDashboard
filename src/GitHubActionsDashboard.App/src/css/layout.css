@@ -34,6 +34,10 @@ h1 a {
     display: flex;
     align-items: center;
     gap: 1rem;
+
+    picture {
+        display: flex;;
+    }
 }
 
 .logo {

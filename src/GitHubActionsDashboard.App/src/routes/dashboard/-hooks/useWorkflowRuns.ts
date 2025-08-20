@@ -8,6 +8,9 @@ export const useWorkflowRuns = (repositories: Record<string, string[]>, branchFi
                  repositories: repositories,
                  branchFilters: branchFilters,
             }
-        })
+        }),
+        refetchOnWindowFocus: false,
+        refetchInterval: 1000 * 60 * 2, // 2 minutes
+        staleTime: 1000 * 60, // 1 minute
     });
 }

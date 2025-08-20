@@ -20,11 +20,8 @@ export const Settings = () => {
 
     return (
         <article>
-            <header>
-                <h2>Settings</h2>
-            </header>
-            <Section>
-                    <h3 className="section-header">Repositories</h3>
+            <h2>Repositories</h2>
+            <Section className="settings">
                 {accounts.isLoading ? (
                     <p>Loading repositories...</p>
                 ) : accounts.isError ? (
@@ -32,7 +29,7 @@ export const Settings = () => {
                 ) : (
                     accounts.data?.map(account => (
                         <section key={account.login}>
-                            <h4>{account.login}</h4>
+                            <h4>{account.avatarUrl && <img src={account.avatarUrl} height={32} width={32} />} {account.login}</h4>
                             <ul className="repository-select-list">
                                 {account.repositories?.map(repo => (
                                     <li key={repo.fullName}>

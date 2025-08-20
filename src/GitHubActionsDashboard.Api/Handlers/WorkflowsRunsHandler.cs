@@ -8,7 +8,7 @@ namespace GitHubActionsDashboard.Api.Handlers;
 
 public static class WorkflowRunsHandler
 {
-    public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromBody] CrossRepositoryRequest request)
+    public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromServices] Octokit.GraphQL.Connection graphQlConnection, [FromBody] CrossRepositoryRequest request)
     {
         IEnumerable<OwnerRepo> repos = request.Repositories.SelectMany(or => or.Value.Select(r => (or.Key, r)));
 
@@ -33,15 +33,23 @@ public static class WorkflowRunsHandler
 
         foreach (var task in workflowTasks)
         {
-            workflows.Add(task.Key, [.. task.Value.Result.Workflows]);
+            workflows.Add(task.Key, [.. task.Value.Result.Workflows.OrderBy(w => w.Name)]);
         }
 
         foreach (var repo in repositories)
         {
             foreach (var workflow in workflows[repo])
             {
+                string? branch = null;
+                if (request.BranchFilters.Count() == 1 && !request.BranchFilters.First().Contains('*'))
+                {
+                    branch = request.BranchFilters.First();
+                }
+
+                //runsTasks.Add(client.Actions.Workflows.Runs.List(repo.Owner.Login, repo.Name, new WorkflowRunsRequest
                 runsTasks.Add(client.Actions.Workflows.Runs.ListByWorkflow(repo.Owner.Name ?? repo.Owner.Login, repo.Name, workflow.Id, new WorkflowRunsRequest
                 {
+                    Branch = branch,
                 },
                 new ApiOptions
                 {
@@ -52,7 +60,18 @@ public static class WorkflowRunsHandler
             }
         }
 
-        await Task.WhenAll(runsTasks);
+        try
+        {
+            await Task.WhenAll(runsTasks);
+        }
+        catch (Octokit.ForbiddenException fex)
+        {
+            Console.WriteLine($"Forbidden access to workflow runs");
+            foreach (var header in fex.HttpResponse.Headers)
+            {
+                Console.WriteLine($"{header.Key}: {header.Value}");
+            }
+        }
 
         foreach (var task in runsTasks)
         {
