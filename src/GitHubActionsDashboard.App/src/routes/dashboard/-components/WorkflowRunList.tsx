@@ -9,7 +9,7 @@ export const WorkflowRunList: React.FC<WorkflowRunListProps> = ({ runs }) => {
                 <section className="workflow-run-card">No runs found.</section>
             }
             {runs?.map((run) => (
-                <WorkflowRunCard key={run.details.id} workflowRun={run} />
+                <WorkflowRunCard key={run.id} workflowRun={run} />
             ))}
         </div>
     );

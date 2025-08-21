@@ -13,7 +13,7 @@ export const WorkflowList : React.FC<WorkflowListProps> = ({workflows}) => {
             {workflows.length === 0 ? (
                 <p>No workflows found.</p>
             ) : workflows.map((workflow) => (
-                <WorkflowCard key={workflow.details.id} workflow={workflow} />
+                <WorkflowCard key={workflow.id} workflow={workflow} />
             )
             )}
         </section>

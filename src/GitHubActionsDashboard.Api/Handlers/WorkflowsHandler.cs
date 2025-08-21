@@ -74,10 +74,16 @@ public static class WorkflowsHandler
 
                 results.Add(new RepositoryModel
                 {
-                    Details = workflowRepo.Key,
+                    Name = repo.Name,
+                    Owner = repo.Owner.Name ?? repo.Owner.Login,
+                    NodeId = repo.NodeId,
+                    HtmlUrl = repo.HtmlUrl,
                     Workflows = workflowRepo.Value.Select(workflow => new WorkflowModel
                     {
-                        Details = workflow,
+                        Name = workflow.Name,
+                        Id = workflow.Id,
+                        NodeId = workflow.NodeId,
+                        HtmlUrl = workflow.HtmlUrl,
                         RunStatus = status,
                     })
                 });

@@ -4,13 +4,19 @@ namespace GitHubActionsDashboard.Api.Models.Dashboard;
 
 public record RepositoryModel
 {
-    public required Octokit.Repository Details { get; init; }
+    public required string Name { get; init; }
+
+    public required string Owner { get; init; }
+
+    public required string NodeId { get; init; }
+
+    public required string HtmlUrl { get; init; }
 
     public RagStatus OverallStatus
     {
         get
         {
-            var conclusions = Workflows.SelectMany(w => w.Runs.GroupBy(r => r.Details.HeadBranch).Select(rg => rg.OrderByDescending(r => r.Details.UpdatedAt).First())).Select(r => r.Details.Conclusion);
+            var conclusions = Workflows.SelectMany(w => w.Runs.GroupBy(r => r.HeadBranch).Select(rg => rg.OrderByDescending(r => r.UpdatedAt).First())).Select(r => r.Conclusion);
 
             if (conclusions.Contains(WorkflowRunConclusion.Failure) ||
                 conclusions.Contains(WorkflowRunConclusion.StartupFailure) ||

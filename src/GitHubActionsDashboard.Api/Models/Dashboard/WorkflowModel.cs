@@ -7,24 +7,22 @@ public record WorkflowModel
     /// <summary>
     /// The Id for this workflow.
     /// </summary>
-    public long Id { get; private set; }
+    public long Id { get; init; }
 
     /// <summary>
     /// GraphQL Node Id.
     /// </summary>
-    public string NodeId { get; private set; }
+    public required string NodeId { get; init; }
 
     /// <summary>
     /// Name of the workflow.
     /// </summary>
-    public string Name { get; private set; }
+    public required string Name { get; init; }
 
     /// <summary>
     /// The URL for the HTML view of this workflow.
     /// </summary>
-    public string HtmlUrl { get; private set; }
-
-    public required Workflow Details { get; init; }
+    public required string HtmlUrl { get; init; }
 
     public IEnumerable<WorkflowRunModel> Runs { get; init; } = [];
 
@@ -35,7 +33,7 @@ public record WorkflowModel
         get
         {
             //var conclusions = Runs.Select(r => r.Details.Conclusion).Distinct();
-            var conclusions = Runs.GroupBy(r => r.Details.HeadBranch).Select(rg => rg.OrderByDescending(r => r.Details.UpdatedAt).First()).Select(r => r.Details.Conclusion);
+            var conclusions = Runs.GroupBy(r => r.HeadBranch).Select(rg => rg.OrderByDescending(r => r.UpdatedAt).First()).Select(r => r.Conclusion);
 
             if (conclusions.Contains(WorkflowRunConclusion.Failure) ||
                 conclusions.Contains(WorkflowRunConclusion.StartupFailure) ||

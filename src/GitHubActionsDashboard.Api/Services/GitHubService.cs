@@ -1,28 +1,58 @@
 ﻿using System.Net;
+using System.Text.Json;
+using GitHubActionsDashboard.Api.Models.Dashboard;
+using Microsoft.Extensions.Caching.Distributed;
 using Octokit;
 
 namespace GitHubActionsDashboard.Api.Services;
 
 public interface IGitHubService
 {
+    Task<IEnumerable<WorkflowModel>> GetWorkflowsAsync(string owner, string repo, CancellationToken cancellationToken);
+
     Task<WorkflowRunsResponse> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken);
 }
 
-internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
+internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache) : IGitHubService
 {
     private readonly SemaphoreSlim _gate = new(8);
+
+    public async Task<IEnumerable<WorkflowModel>> GetWorkflowsAsync(string owner, string repo, CancellationToken cancellationToken)
+    {
+        var cacheKey = $"gh:workflows:{owner}/{repo}";
+
+        var cachedWorkflows = await TryGetFromCache(cacheKey, cancellationToken);
+        if (cachedWorkflows != null)
+        {
+            return cachedWorkflows;
+        }
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            await Jitter(cancellationToken);
+            var response = await OctoCall(() => gitHubClient.Actions.Workflows.List(owner, repo), cancellationToken);
+
+            var workflows = response.Workflows.ToWorkflowModel();
+
+            await TryCacheWorkflows(cacheKey, workflows, cancellationToken);
+
+            return workflows;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
 
     public async Task<WorkflowRunsResponse> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            // tiny pre-call jitter helps avoid burst patterns
-            await Task.Delay(Random.Shared.Next(0, 200), cancellationToken);
-
+            await Jitter(cancellationToken);
             var req = new WorkflowRunsRequest
             {
-                //                Status = CheckRun
                 Branch = branch,
 
             };
@@ -47,7 +77,7 @@ internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
         return Task.WhenAll(tasks);
     }
 
-    private static async Task<T> OctoCall<T>(Func<Task<T>> op, CancellationToken ct, int maxAttempts = 4)
+    private static async Task<T> OctoCall<T>(Func<Task<T>> operation, CancellationToken cancellationToken, int maxAttempts = 4)
     {
         const int baseMs = 250;
         const int capMs = 8000;
@@ -56,7 +86,7 @@ internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
         {
             try
             {
-                return await op();
+                return await operation();
             }
             catch (AbuseException ex) when (attempt < maxAttempts - 1)
             {
@@ -64,7 +94,7 @@ internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
                 var delay = ex.RetryAfterSeconds.HasValue
                     ? TimeSpan.FromSeconds(Math.Clamp(ex.RetryAfterSeconds.Value, 1, 60))
                     : FullJitter(attempt, baseMs, capMs);
-                await Task.Delay(delay, ct);
+                await Task.Delay(delay, cancellationToken);
                 continue;
             }
             catch (RateLimitExceededException ex) when (attempt < maxAttempts - 1)
@@ -72,23 +102,23 @@ internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
                 // Core rate limit; wait until reset.
                 var delay = ex.Reset - DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1);
                 if (delay < TimeSpan.Zero) delay = FullJitter(attempt, baseMs, capMs);
-                await Task.Delay(delay, ct);
+                await Task.Delay(delay, cancellationToken);
                 continue;
             }
             catch (ApiException ex) when (attempt < maxAttempts - 1 && IsRetryable(ex))
             {
-                await Task.Delay(FullJitter(attempt, baseMs, capMs), ct);
+                await Task.Delay(FullJitter(attempt, baseMs, capMs), cancellationToken);
                 continue;
             }
             catch (HttpRequestException) when (attempt < maxAttempts - 1)
             {
-                await Task.Delay(FullJitter(attempt, baseMs, capMs), ct);
+                await Task.Delay(FullJitter(attempt, baseMs, capMs), cancellationToken);
                 continue;
             }
         }
 
         // Final try (bubble on failure)
-        return await op();
+        return await operation();
 
         static bool IsRetryable(ApiException ex)
         {
@@ -106,56 +136,52 @@ internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
             return TimeSpan.FromMilliseconds(Random.Shared.Next(0, Math.Max(1, max)));
         }
     }
-}
 
+    private static Task Jitter(CancellationToken cancellationToken) =>
+        Task.Delay(Random.Shared.Next(0, 200), cancellationToken);
 
-/*public interface IGitHubService
-{
-    Task<IReadOnlyList<Repository>> GetRepositories(CancellationToken cancellationToken = default);
-
-    Task TestAsync(CancellationToken cancellationToken = default);
-}
-
-internal class GitHubService(IGitHubClient gitHubClient) : IGitHubService
-{
-    public Task<IReadOnlyList<Repository>> GetRepositories(CancellationToken cancellationToken = default)
+    private async Task<IEnumerable<WorkflowModel>?> TryGetFromCache(string cacheKey, CancellationToken cancellationToken)
     {
         try
         {
-            Connection connection = new Connection(new ProductHeaderValue("GitHubActionsDashboard", "0.1"))
-            {
-                Credentials = new Credentials(client.DefaultRequestHeaders.Authorization?.Parameter ?? string.Empty)
-            };
+            var cachedJson = await cache.GetStringAsync(cacheKey, cancellationToken);
+            if (String.IsNullOrEmpty(cachedJson))
+                return null;
 
-            ApiConnection apiConnection = new ApiConnection(connection);
-            RepositoriesClient repositoriesClient = new(apiConnection);
-            return repositoriesClient.GetAllForCurrent();
+            return JsonSerializer.Deserialize<IEnumerable<WorkflowModel>>(cachedJson);
         }
-        catch (Exception ex)
+        catch (JsonException)
         {
-            throw;
+            // Corrupted cache data, remove it
+            await cache.RemoveAsync(cacheKey, cancellationToken);
+            return null;
+        }
+        catch (InvalidOperationException)
+        {
+            // Redis connection issue, continue without cache
+            return null;
         }
     }
 
-    public async Task<IReadOnlyList<Workflow>> GetWorkflows(string owner, string repository, CancellationToken cancellationToken = default)
+    private async Task TryCacheWorkflows(string cacheKey, IEnumerable<WorkflowModel> workflows, CancellationToken cancellationToken)
     {
-        WorkflowsResponse response = await gitHubClient.Actions.Workflows.List(owner, repository);
-
-        return response.Workflows;
-    }
-
-    public Task TestAsync(CancellationToken cancellationToken = default)
-    {
-        //EnsureAuthorized();
-
-        return Task.CompletedTask;
-    }
-
-    private void EnsureAuthorized()
-    {
-        var token = client.DefaultRequestHeaders.Authorization;
-
-        if (token?.Parameter is null) throw new UnauthorizedException();
+        try
+        {
+            var json = JsonSerializer.Serialize(workflows);
+            await cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions
+            {
+               AbsoluteExpirationRelativeToNow =  TimeSpan.FromMinutes(30)
+            }, cancellationToken);
+        }
+        catch (JsonException)
+        {
+            // Serialization failed, log but don't fail the request
+            // TODO: Add logging
+        }
+        catch (InvalidOperationException)
+        {
+            // Redis connection issue, continue without caching
+            // TODO: Add logging
+        }
     }
 }
-*/

@@ -8,7 +8,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({repositories}) =>
             {repositories?.length === 0 ? (
                 <p>No repositories found.</p>
             ) : repositories?.map((repository) => (
-                <RepositoryCard key={`${repository.details.owner?.name ?? repository.details.owner?.login}|${repository.details.name}`} repository={repository} />
+                <RepositoryCard key={`${repository.owner}|${repository.name}`} repository={repository} />
             ))}
         </section>
     );

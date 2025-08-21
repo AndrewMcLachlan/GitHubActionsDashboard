@@ -16,8 +16,8 @@ public static class WorkflowRunsHandler
 
         List<Task<Repository>> repoTasks = [.. repos.Select(repo => client.Repository.Get(repo.Owner, repo.Repository))];
 
-        Dictionary<Repository, List<Workflow>> workflows = [];
-        Dictionary<Repository, Task<WorkflowsResponse>> workflowTasks = [];
+        Dictionary<Repository, IEnumerable<WorkflowModel>> workflows = [];
+        Dictionary<Repository, Task<IEnumerable<WorkflowModel>>> workflowTasks = [];
 
         List<Task<WorkflowRunsResponse>> runsTasks = [];
         List<WorkflowRun> workflowRuns = [];
@@ -28,14 +28,14 @@ public static class WorkflowRunsHandler
 
         foreach (var repo in repositories)
         {
-            workflowTasks.Add(repo, client.Actions.Workflows.List(repo.Owner.Name ?? repo.Owner.Login, repo.Name));
+            workflowTasks.Add(repo, gitHubService.GetWorkflowsAsync(repo.Owner.Name ?? repo.Owner.Login, repo.Name, cancellationToken));
         }
 
         await Task.WhenAll(workflowTasks.Values);
 
         foreach (var task in workflowTasks)
         {
-            workflows.Add(task.Key, [.. task.Value.Result.Workflows.OrderBy(w => w.Name)]);
+            workflows.Add(task.Key, [.. task.Value.Result.OrderBy(w => w.Name)]);
         }
 
         foreach (var repo in repositories)
@@ -87,11 +87,30 @@ public static class WorkflowRunsHandler
         {
             results.Add(new RepositoryModel
             {
-                Details = workflowRepo.Key,
+                Name = workflowRepo.Key.Name,
+                Owner = workflowRepo.Key.Owner.Name ?? workflowRepo.Key.Owner.Login,
+                NodeId = workflowRepo.Key.NodeId,
+                HtmlUrl = workflowRepo.Key.HtmlUrl,
                 Workflows = workflowRepo.Value.Select(workflow => new WorkflowModel
                 {
-                    Details = workflow,
-                    Runs = workflowRuns.Where(run => run.WorkflowId == workflow.Id).Select(wr => new WorkflowRunModel { Details = wr })
+                    Name = workflow.Name,
+                    Id = workflow.Id,
+                    NodeId = workflow.NodeId,
+                    HtmlUrl = workflow.HtmlUrl,
+                    Runs = workflowRuns.Where(run => run.WorkflowId == workflow.Id).Select(wr => new WorkflowRunModel
+                    {
+                        Id = wr.Id,
+                        NodeId = wr.NodeId,
+                        Conclusion = wr.Conclusion,
+                        CreatedAt = wr.CreatedAt,
+                        Event = wr.Event,
+                        HeadBranch = wr.HeadBranch,
+                        HtmlUrl = wr.HtmlUrl,
+                        RunNumber = wr.RunNumber,
+                        Status = wr.Status,
+                        TriggeringActor = wr.TriggeringActor?.Name ?? wr.TriggeringActor?.Login,
+                        UpdatedAt = wr.UpdatedAt,
+                    })
                 })
             });
         }

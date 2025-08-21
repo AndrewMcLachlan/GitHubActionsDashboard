@@ -12,30 +12,6 @@ export type AdvancedSecurity = {
     status?: string | null;
 } | null;
 
-export type Commit = {
-    message?: string | null;
-    author?: Committer;
-    committer?: Committer;
-    tree?: GitReference;
-    parents?: Array<GitReference2> | null;
-    commentCount?: number;
-    verification?: Verification;
-    nodeId?: string | null;
-    url?: string | null;
-    label?: string | null;
-    ref?: string | null;
-    sha?: string | null;
-    user?: User;
-    repository?: Repository3;
-} | null;
-
-export type Committer = {
-    nodeId?: string | null;
-    name?: string | null;
-    email?: string | null;
-    date?: string;
-} | null;
-
 export type CrossRepositoryRequest = {
     repositories?: {
         [key: string]: Array<string>;
@@ -47,36 +23,6 @@ export type DependabotSecurityUpdates = {
     status?: string | null;
 } | null;
 
-export type GitReference = {
-    nodeId?: string | null;
-    url?: string | null;
-    label?: string | null;
-    ref?: string | null;
-    sha?: string | null;
-    user?: User;
-    repository?: Repository3;
-} | null;
-
-export type GitReference2 = {
-    nodeId?: string | null;
-    url?: string | null;
-    label?: string | null;
-    ref?: string | null;
-    sha?: string | null;
-    user?: unknown;
-    repository?: unknown;
-};
-
-export type Label = {
-    id?: number;
-    url?: string | null;
-    name?: string | null;
-    nodeId?: string | null;
-    color?: string | null;
-    description?: string | null;
-    default?: boolean;
-};
-
 export type LicenseMetadata = {
     key?: string | null;
     nodeId?: string | null;
@@ -86,73 +32,11 @@ export type LicenseMetadata = {
     featured?: boolean;
 } | null;
 
-export type Milestone = {
-    url?: string | null;
-    htmlUrl?: string | null;
-    id?: number;
-    number?: number;
-    nodeId?: string | null;
-    state?: StringEnumOfItemState;
-    title?: string | null;
-    description?: string | null;
-    creator?: User;
-    openIssues?: number;
-    closedIssues?: number;
-    createdAt?: string;
-    dueOn?: string | null;
-    closedAt?: string | null;
-    updatedAt?: string | null;
-} | null;
-
 export type NullableOfAccountType = number | null;
 
 export type NullableOfRepositoryVisibility = number | null;
 
-export type NullableOfStringEnumOfLockReason = string | null;
-
-export type NullableOfStringEnumOfMergeableState = string | null;
-
 export type NullableOfStringEnumOfWorkflowRunConclusion = string | null;
-
-export type Organization = {
-    billingAddress?: string | null;
-    reposUrl?: string | null;
-    eventsUrl?: string | null;
-    hooksUrl?: string | null;
-    issuesUrl?: string | null;
-    membersUrl?: string | null;
-    publicMembersUrl?: string | null;
-    description?: string | null;
-    isVerified?: boolean;
-    hasOrganizationProjects?: boolean;
-    hasRepositoryProjects?: boolean;
-    updatedAt?: string;
-    avatarUrl?: string | null;
-    bio?: string | null;
-    blog?: string | null;
-    collaborators?: number | null;
-    company?: string | null;
-    createdAt?: string;
-    diskUsage?: number | null;
-    email?: string | null;
-    followers?: number;
-    following?: number;
-    hireable?: boolean | null;
-    htmlUrl?: string | null;
-    id?: number;
-    nodeId?: string | null;
-    location?: string | null;
-    login?: string | null;
-    name?: string | null;
-    type?: NullableOfAccountType;
-    ownedPrivateRepos?: number;
-    plan?: Plan;
-    privateGists?: number | null;
-    publicGists?: number;
-    publicRepos?: number;
-    totalPrivateRepos?: number;
-    url?: string | null;
-} | null;
 
 export type Plan = {
     collaborators?: number;
@@ -163,48 +47,6 @@ export type Plan = {
     filledSeats?: number;
     seats?: number;
 } | null;
-
-export type PullRequest = {
-    id?: number;
-    nodeId?: string | null;
-    url?: string | null;
-    htmlUrl?: string | null;
-    diffUrl?: string | null;
-    patchUrl?: string | null;
-    issueUrl?: string | null;
-    statusesUrl?: string | null;
-    number?: number;
-    state?: StringEnumOfItemState;
-    title?: string | null;
-    body?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-    closedAt?: string | null;
-    mergedAt?: string | null;
-    head?: GitReference;
-    base?: GitReference;
-    user?: User;
-    assignee?: User;
-    assignees?: Array<User2> | null;
-    milestone?: Milestone;
-    draft?: boolean;
-    merged?: boolean;
-    mergeable?: boolean | null;
-    mergeableState?: NullableOfStringEnumOfMergeableState;
-    mergedBy?: User;
-    mergeCommitSha?: string | null;
-    comments?: number;
-    commits?: number;
-    additions?: number;
-    deletions?: number;
-    changedFiles?: number;
-    locked?: boolean;
-    maintainerCanModify?: boolean | null;
-    requestedReviewers?: Array<unknown> | null;
-    requestedTeams?: Array<Team> | null;
-    labels?: Array<Label> | null;
-    activeLockReason?: NullableOfStringEnumOfLockReason;
-};
 
 export type RagStatus = 'None' | 'Red' | 'Amber' | 'Green';
 
@@ -267,60 +109,11 @@ export type Repository2 = {
     htmlUrl: string;
 };
 
-export type Repository3 = {
-    url?: string | null;
-    htmlUrl?: string | null;
-    cloneUrl?: string | null;
-    gitUrl?: string | null;
-    sshUrl?: string | null;
-    svnUrl?: string | null;
-    mirrorUrl?: string | null;
-    archiveUrl?: string | null;
-    id?: number;
-    nodeId?: string | null;
-    owner?: unknown;
-    name?: string | null;
-    fullName?: string | null;
-    isTemplate?: boolean;
-    description?: string | null;
-    homepage?: string | null;
-    language?: string | null;
-    private?: boolean;
-    fork?: boolean;
-    forksCount?: number;
-    stargazersCount?: number;
-    watchersCount?: number;
-    defaultBranch?: string | null;
-    openIssuesCount?: number;
-    pushedAt?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-    permissions?: unknown;
-    parent?: Repository;
-    source?: Repository;
-    license?: unknown;
-    hasDiscussions?: boolean;
-    hasIssues?: boolean;
-    hasWiki?: boolean;
-    hasDownloads?: boolean;
-    allowRebaseMerge?: boolean | null;
-    allowSquashMerge?: boolean | null;
-    allowMergeCommit?: boolean | null;
-    hasPages?: boolean;
-    subscribersCount?: number;
-    size?: number;
-    archived?: boolean;
-    topics?: Array<string> | null;
-    deleteBranchOnMerge?: boolean | null;
-    visibility?: NullableOfRepositoryVisibility;
-    allowAutoMerge?: boolean | null;
-    allowUpdateBranch?: boolean | null;
-    webCommitSignoffRequired?: boolean | null;
-    securityAndAnalysis?: unknown;
-} | null;
-
 export type RepositoryModel = {
-    details: Repository;
+    name: string;
+    owner: string;
+    nodeId: string;
+    htmlUrl: string;
     overallStatus?: RagStatus;
     workflows?: Array<WorkflowModel>;
 };
@@ -353,41 +146,7 @@ export type SecurityAndAnalysis = {
     secretScanningValidityChecks?: SecretScanningValidityChecks;
 } | null;
 
-export type StringEnumOfItemState = string;
-
-export type StringEnumOfTeamPrivacy = string;
-
-export type StringEnumOfVerificationReason = string;
-
 export type StringEnumOfWorkflowRunStatus = string;
-
-export type StringEnumOfWorkflowState = string;
-
-export type Team = {
-    url?: string | null;
-    htmlUrl?: string | null;
-    id?: number;
-    nodeId?: string | null;
-    slug?: string | null;
-    name?: string | null;
-    description?: string | null;
-    privacy?: StringEnumOfTeamPrivacy;
-    permission?: string | null;
-    teamRepositoryPermissions?: TeamRepositoryPermissions;
-    membersCount?: number;
-    reposCount?: number;
-    organization?: Organization;
-    parent?: Team;
-    ldapDistinguishedName?: string | null;
-};
-
-export type TeamRepositoryPermissions = {
-    pull?: boolean;
-    triage?: boolean;
-    push?: boolean;
-    maintain?: boolean;
-    admin?: boolean;
-} | null;
 
 export type User = {
     permissions?: RepositoryPermissions;
@@ -423,119 +182,28 @@ export type User = {
     url?: string | null;
 } | null;
 
-export type User2 = {
-    permissions?: unknown;
-    siteAdmin?: boolean;
-    suspendedAt?: string | null;
-    suspended?: boolean;
-    ldapDistinguishedName?: string | null;
-    updatedAt?: string;
-    avatarUrl?: string | null;
-    bio?: string | null;
-    blog?: string | null;
-    collaborators?: number | null;
-    company?: string | null;
-    createdAt?: string;
-    diskUsage?: number | null;
-    email?: string | null;
-    followers?: number;
-    following?: number;
-    hireable?: boolean | null;
-    htmlUrl?: string | null;
-    id?: number;
-    nodeId?: string | null;
-    location?: string | null;
-    login?: string | null;
-    name?: string | null;
-    type?: NullableOfAccountType;
-    ownedPrivateRepos?: number;
-    plan?: unknown;
-    privateGists?: number | null;
-    publicGists?: number;
-    publicRepos?: number;
-    totalPrivateRepos?: number;
-    url?: string | null;
-};
-
-export type Verification = {
-    verified?: boolean;
-    reason?: StringEnumOfVerificationReason;
-    signature?: string | null;
-    payload?: string | null;
-} | null;
-
-export type Workflow = {
-    id?: number;
-    nodeId?: string | null;
-    name?: string | null;
-    path?: string | null;
-    state?: StringEnumOfWorkflowState;
-    createdAt?: string;
-    updatedAt?: string;
-    url?: string | null;
-    htmlUrl?: string | null;
-    badgeUrl?: string | null;
-    deletedAt?: string | null;
-};
-
 export type WorkflowModel = {
     id?: number;
-    nodeId?: string;
-    name?: string;
-    htmlUrl?: string;
-    details: Workflow;
+    nodeId: string;
+    name: string;
+    htmlUrl: string;
     runs?: Array<WorkflowRunModel>;
     runStatus?: RagStatus;
     overallStatus?: RagStatus;
 };
 
-export type WorkflowReference = {
-    path?: string | null;
-    sha?: string | null;
-    ref?: string | null;
-};
-
-export type WorkflowRun = {
-    id?: number;
-    name?: string | null;
-    nodeId?: string | null;
-    checkSuiteId?: number;
-    checkSuiteNodeId?: string | null;
-    headBranch?: string | null;
-    headSha?: string | null;
-    path?: string | null;
-    runNumber?: number;
-    event?: string | null;
-    displayTitle?: string | null;
-    status?: StringEnumOfWorkflowRunStatus;
-    conclusion?: NullableOfStringEnumOfWorkflowRunConclusion;
-    workflowId?: number;
-    url?: string | null;
-    htmlUrl?: string | null;
-    pullRequests?: Array<PullRequest> | null;
-    createdAt?: string;
-    updatedAt?: string;
-    actor?: User;
-    runAttempt?: number;
-    referencedWorkflows?: Array<WorkflowReference> | null;
-    runStartedAt?: string;
-    triggeringActor?: User;
-    jobsUrl?: string | null;
-    logsUrl?: string | null;
-    checkSuiteUrl?: string | null;
-    artifactsUrl?: string | null;
-    cancelUrl?: string | null;
-    rerunUrl?: string | null;
-    previousAttemptUrl?: string | null;
-    workflowUrl?: string | null;
-    headCommit?: Commit;
-    repository?: Repository3;
-    headRepository?: Repository3;
-    headRepositoryId?: number;
-};
-
 export type WorkflowRunModel = {
-    details: WorkflowRun;
+    id?: number;
+    nodeId: string;
+    conclusion: NullableOfStringEnumOfWorkflowRunConclusion;
+    headBranch: string;
+    event: string;
+    runNumber: number;
+    triggeringActor?: string | null;
+    status: StringEnumOfWorkflowRunStatus;
+    createdAt: string;
+    updatedAt: string;
+    htmlUrl: string;
     ragStatus?: RagStatus;
 };
 

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Identity;
 using GitHubActionsDashboard.Api.Exceptions;
 using GitHubActionsDashboard.Api.Handlers;
 using GitHubActionsDashboard.Api.Models;
@@ -9,6 +10,7 @@ using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
 using Octokit;
+using StackExchange.Redis;
 
 const string ApiPrefix = "/api";
 
@@ -86,7 +88,25 @@ builder.Services.AddOpenApi("v1", options =>
     });
 });
 
-builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddStackExchangeRedisCache((async options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Redis");
+
+    var configurationOptions = ConfigurationOptions.Parse(connectionString!);
+    configurationOptions.AbortOnConnectFail = false;
+    configurationOptions.ConnectTimeout = 10000;
+    configurationOptions.SyncTimeout = 5000;
+    configurationOptions.ConnectRetry = 3;
+
+    await configurationOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
+
+    options.ConfigurationOptions = configurationOptions;
+
+    options.InstanceName = $"GitHubActionsDashboard-{builder.Environment.EnvironmentName}";
+}));
+
+
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = ".GitHub.Session";

@@ -35,3 +35,15 @@
   animation: rotate3dWithScale 2s ease-in-out infinite;
   transform-style: preserve-3d;
 }
+
+@media (prefers-color-scheme: dark) {
+  .loading-spinner-3d svg {
+    fill: #FFF;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .loading-spinner-3d svg {
+    fill: #000;
+  }
+}
