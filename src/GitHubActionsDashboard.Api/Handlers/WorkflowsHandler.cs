@@ -8,7 +8,7 @@ using OwnerRepo = (string Owner, string Repository);
 
 namespace GitHubActionsDashboard.Api.Handlers;
 
-public static class WorkflowRunsHandler
+public static class WorkflowsHandler
 {
     public static async Task<Ok<IEnumerable<RepositoryModel>>> Handle([FromServices] IGitHubClient client, [FromServices] IGitHubService gitHubService, [FromBody] CrossRepositoryRequest request, CancellationToken cancellationToken)
     {
@@ -42,13 +42,13 @@ public static class WorkflowRunsHandler
         {
             foreach (var workflow in workflows[repo])
             {
-                string? branch = null;
+                /*string? branch = null;
                 if (request.BranchFilters.Count() == 1 && !request.BranchFilters.First().Contains('*'))
                 {
                     branch = request.BranchFilters.First();
-                }
+                }*/
 
-                runsTasks.Add(gitHubService.GetLastRunsAsync(repo.Owner.Login, repo.Name, workflow.Id, 20, branch, cancellationToken));
+                runsTasks.Add(gitHubService.GetLastRunsAsync(repo.Owner.Login, repo.Name, workflow.Id, 1, repo.DefaultBranch, cancellationToken));
 
                 /* //runsTasks.Add(client.Actions.Workflows.Runs.List(repo.Owner.Login, repo.Name, new WorkflowRunsRequest
                  runsTasks.Add(client.Actions.Workflows.Runs.ListByWorkflow(repo.Owner.Name ?? repo.Owner.Login, repo.Name, workflow.Id, new WorkflowRunsRequest
