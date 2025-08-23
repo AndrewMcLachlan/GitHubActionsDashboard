@@ -1,20 +1,21 @@
-﻿using GitHubActionsDashboard.Api.Handlers;
+﻿#pragma warning disable CS9113
+using GitHubActionsDashboard.Api.Models.Dashboard;
 using Octokit.GraphQL;
-using Octokit.GraphQL.Core;
-using Octokit.GraphQL.Model;
 
 namespace GitHubActionsDashboard.Api.Services;
 
 public interface IGraphQLService
 {
-    Task<IEnumerable<WorkflowWithRuns>> GetWorkflowRuns(IEnumerable<string> workflowNodeIds, CancellationToken cancellationToken = default);
+    Task<IEnumerable<WorkflowModel>> GetWorkflowRuns(IEnumerable<string> workflowNodeIds, CancellationToken cancellationToken = default);
 }
 
 public class GraphQLService(Octokit.GraphQL.Connection connection) : IGraphQLService
 {
-    public async Task<IEnumerable<WorkflowWithRuns>> GetWorkflowRuns(IEnumerable<string> workflowNodeIds, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<WorkflowModel>> GetWorkflowRuns(IEnumerable<string> workflowNodeIds, CancellationToken cancellationToken = default)
     {
-        const int PageSize = 20;
+        throw new NotImplementedException();
+
+        /*const int PageSize = 20;
         int pageNumber = 0;
 
         Arg<int> per = 20;
@@ -39,24 +40,24 @@ public class GraphQLService(Octokit.GraphQL.Connection connection) : IGraphQLSer
             new Query()
             .Nodes(accessible.ToList())
             .OfType<Octokit.GraphQL.Model.Workflow>()
-            .Select(wf => new WorkflowWithRuns
+            .Select(wf => new WorkflowModel
             {
-                Id = wf.Id,
+                Id = wf.Id.,
                 Name = wf.Name,
                 Runs = wf.Runs(per, null, null, null, new Octokit.GraphQL.Model.WorkflowRunOrder
                 {
                     Field = Octokit.GraphQL.Model.WorkflowRunOrderField.CreatedAt,
                     Direction = Octokit.GraphQL.Model.OrderDirection.Desc
-                }).Nodes.Select(r => new RunDto
+                }).Nodes.Select(r => new WorkflowRunModel
                 {
-                    DatabaseId = r.DatabaseId,
+                    //DatabaseId = r.DatabaseId,
                     RunNumber = r.RunNumber,
-                    Status = r.CheckSuite.Select(c => c.Status).SingleOrDefault(),
-                    Conclusion = r.CheckSuite.Select(c => c.Conclusion).SingleOrDefault(),
+                    //Status = r.CheckSuite.Select(c => c.Status).SingleOrDefault(),
+                    //Conclusion = r.CheckSuite.Select(c => c.Conclusion).SingleOrDefault(),
                     //HeadBranch = r.CheckSuite.Select(c => c.Branch.Name).SingleOrDefault(),
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    Url = r.Url
+                    HtmlUrl = r.Url
                 }).ToList()
             })
             .Compile();
@@ -67,14 +68,14 @@ public class GraphQLService(Octokit.GraphQL.Connection connection) : IGraphQLSer
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                // Add logger
             }
 
             pageNumber++;
             ids = [.. workflowNodeIds.Skip(pageNumber * PageSize).Take(PageSize).Select(id => new ID(id))];
         }
 
-        return results;
+        return results;*/
     }
 
     private async Task<IEnumerable<ID>> FetchSafe(
@@ -99,3 +100,4 @@ public class GraphQLService(Octokit.GraphQL.Connection connection) : IGraphQLSer
         }
     }
 }
+#pragma warning restore CS9113

@@ -2,7 +2,7 @@
 
 namespace Octokit;
 
-public static class WorkflowExctensions
+public static class WorkflowExtensions
 {
     public static IEnumerable<WorkflowModel> ToWorkflowModel(this IEnumerable<Workflow> workflows)
     {

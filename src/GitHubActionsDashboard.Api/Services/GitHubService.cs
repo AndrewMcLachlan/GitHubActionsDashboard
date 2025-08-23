@@ -10,16 +10,18 @@ public interface IGitHubService
 {
     Task<IEnumerable<WorkflowModel>> GetWorkflowsAsync(string owner, string repo, CancellationToken cancellationToken);
 
-    Task<WorkflowRunsResponse> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken);
+    Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken);
+
+    Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, IEnumerable<string> branches, CancellationToken cancellationToken);
 }
 
-internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache) : IGitHubService
+internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache, ICacheKeyService cacheKeyService) : IGitHubService
 {
     private readonly SemaphoreSlim _gate = new(8);
 
     public async Task<IEnumerable<WorkflowModel>> GetWorkflowsAsync(string owner, string repo, CancellationToken cancellationToken)
     {
-        var cacheKey = $"gh:workflows:{owner}/{repo}";
+        var cacheKey = cacheKeyService.GetCacheKey($"gh:workflows:{owner}/{repo}");
 
         var cachedWorkflows = await TryGetFromCache(cacheKey, cancellationToken);
         if (cachedWorkflows != null)
@@ -45,36 +47,91 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
         }
     }
 
-    public async Task<WorkflowRunsResponse> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken)
+    public async Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken);
         try
         {
             await Jitter(cancellationToken);
-            var req = new WorkflowRunsRequest
+            var req = new Octokit.WorkflowRunsRequest
             {
                 Branch = branch,
 
             };
 
-            return await OctoCall(
-                () => gitHubClient.Actions.Workflows.Runs.ListByWorkflow(owner, repo, workflowId, req,
-                               new ApiOptions
-                               {
-                                   PageCount = 1,
-                                   PageSize = 20,
-                                   StartPage = 1,
-                               }), cancellationToken);
+            var response = await OctoCall(() =>
+                gitHubClient.Actions.Workflows.Runs.ListByWorkflow(owner, repo, workflowId, req,
+                    new ApiOptions
+                    {
+                        PageCount = 1,
+                        PageSize = perPage,
+                        StartPage = 1,
+                    }), cancellationToken);
+
+            return response.WorkflowRuns.Select(wr => new WorkflowRunModel()
+            {
+                Id = wr.Id,
+                WorkflowId = wr.WorkflowId,
+                NodeId = wr.NodeId,
+                Conclusion = wr.Conclusion,
+                CreatedAt = wr.CreatedAt,
+                Event = wr.Event,
+                HeadBranch = wr.HeadBranch,
+                HtmlUrl = wr.HtmlUrl,
+                RunNumber = wr.RunNumber,
+                Status = wr.Status,
+                TriggeringActor = wr.TriggeringActor?.Name ?? wr.TriggeringActor?.Login,
+                UpdatedAt = wr.UpdatedAt,
+            });
         }
         finally { _gate.Release(); }
     }
 
-    // Fan out safely across many workflows
-    public Task<WorkflowRunsResponse[]> GetLastRunsForManyAsync(
-        string owner, string repo, IEnumerable<long> workflowIds, int perPage, string? branch, CancellationToken ct)
+    public async Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, IEnumerable<string> branches, CancellationToken cancellationToken)
     {
-        var tasks = workflowIds.Select(id => GetLastRunsAsync(owner, repo, id, perPage, branch, ct));
-        return Task.WhenAll(tasks);
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            string? branch = null;
+            if (branches.Count() == 1 && !branches.First().Contains('*'))
+            {
+                branch = branches.First();
+            }
+
+            await Jitter(cancellationToken);
+            var req = new Octokit.WorkflowRunsRequest
+            {
+                Branch = branch,
+            };
+
+            var response = await OctoCall(() =>
+                gitHubClient.Actions.Workflows.Runs.ListByWorkflow(owner, repo, workflowId, req,
+                    new ApiOptions
+                    {
+                        PageCount = 1,
+                        PageSize = perPage,
+                        StartPage = 1,
+                    }), cancellationToken);
+
+            return response.WorkflowRuns
+                .Where(wr => MatchBranch(wr, branches))
+                .Select(wr => new WorkflowRunModel()
+                {
+                    Id = wr.Id,
+                    WorkflowId = wr.WorkflowId,
+                    NodeId = wr.NodeId,
+                    Conclusion = wr.Conclusion,
+                    CreatedAt = wr.CreatedAt,
+                    Event = wr.Event,
+                    HeadBranch = wr.HeadBranch,
+                    HtmlUrl = wr.HtmlUrl,
+                    RunNumber = wr.RunNumber,
+                    Status = wr.Status,
+                    TriggeringActor = wr.TriggeringActor?.Name ?? wr.TriggeringActor?.Login,
+                    UpdatedAt = wr.UpdatedAt,
+                });
+        }
+        finally { _gate.Release(); }
     }
 
     private static async Task<T> OctoCall<T>(Func<Task<T>> operation, CancellationToken cancellationToken, int maxAttempts = 4)
@@ -170,7 +227,7 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
             var json = JsonSerializer.Serialize(workflows);
             await cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions
             {
-               AbsoluteExpirationRelativeToNow =  TimeSpan.FromMinutes(30)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             }, cancellationToken);
         }
         catch (JsonException)
@@ -183,5 +240,16 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
             // Redis connection issue, continue without caching
             // TODO: Add logging
         }
+    }
+
+    private static bool MatchBranch(WorkflowRun workflowRun, IEnumerable<string> branchFilters)
+    {
+        if (!branchFilters.Any()) return true;
+
+        if (branchFilters.Contains(workflowRun.HeadBranch)) return true;
+
+        var startsWith = branchFilters.Where(b => b.EndsWith('*')).Select(b => b.Trim('*'));
+
+        return startsWith.Any(workflowRun.HeadBranch.StartsWith);
     }
 }

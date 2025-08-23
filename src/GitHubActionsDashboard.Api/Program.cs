@@ -4,20 +4,25 @@ using Azure.Identity;
 using GitHubActionsDashboard.Api.Exceptions;
 using GitHubActionsDashboard.Api.Handlers;
 using GitHubActionsDashboard.Api.Models;
+using GitHubActionsDashboard.Api.Models.Dashboard;
 using GitHubActionsDashboard.Api.OpenApi;
 using GitHubActionsDashboard.Api.Serialisation;
 using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
 using Octokit;
+using Octokit.Caching;
 using StackExchange.Redis;
 
 const string ApiPrefix = "/api";
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+}
 
 builder.Services.Configure<JsonOptions>(options =>
 {
@@ -38,33 +43,25 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IGitHubClient, GitHubClient>(services =>
 {
     var context = services.GetRequiredService<IHttpContextAccessor>().HttpContext ?? throw new InvalidOperationException("HttpContext is not available. Ensure IHttpContextAccessor is registered and used correctly.");
+
     var token = context.Session.GetString("github_access_token");
 
     if (String.IsNullOrEmpty(token)) throw new UnauthorizedException();
 
     Connection connection = new(new ProductHeaderValue("GitHubActionsDashboard", "0.1"))
     {
-        Credentials = new Credentials(token)
+        Credentials = new Credentials(token),
+        ResponseCache = services.GetRequiredService<IResponseCache>(),
     };
 
     return new GitHubClient(connection);
 });
 
-builder.Services.AddScoped<Octokit.GraphQL.Connection>(services =>
-{
-    var context = services.GetRequiredService<IHttpContextAccessor>().HttpContext ?? throw new InvalidOperationException("HttpContext is not available. Ensure IHttpContextAccessor is registered and used correctly.");
-    var token = context.Session.GetString("github_access_token");
-
-    if (String.IsNullOrEmpty(token)) throw new UnauthorizedException();
-
-    Octokit.GraphQL.Connection connection = new(new Octokit.GraphQL.ProductHeaderValue("GitHubActionsDashboard", "0.1"), token);
-
-    return connection;
-});
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IGitHubService, GitHubService>();
-builder.Services.AddScoped<IGraphQLService, GraphQLService>();
-
+builder.Services.AddSingleton<ICacheKeyService, CacheKeyService>();
+builder.Services.AddSingleton<IResponseCache, DistributedResponseCache>();
 builder.Services.AddOpenApi("v1", options =>
 {
     //options.AddDocumentTransformer<StringEnumSchemaTransformer>();
@@ -88,24 +85,25 @@ builder.Services.AddOpenApi("v1", options =>
     });
 });
 
-
-builder.Services.AddStackExchangeRedisCache((async options =>
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("Redis");
+    options.ConnectionMultiplexerFactory = async () =>
+    {
+        var connectionString = builder.Configuration.GetConnectionString("Redis");
 
-    var configurationOptions = ConfigurationOptions.Parse(connectionString!);
-    configurationOptions.AbortOnConnectFail = false;
-    configurationOptions.ConnectTimeout = 10000;
-    configurationOptions.SyncTimeout = 5000;
-    configurationOptions.ConnectRetry = 3;
+        var configurationOptions = ConfigurationOptions.Parse(connectionString!);
+        configurationOptions.AbortOnConnectFail = false;
+        configurationOptions.ConnectTimeout = 10000;
+        configurationOptions.SyncTimeout = 5000;
+        configurationOptions.ConnectRetry = 3;
 
-    await configurationOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
+        await configurationOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
 
-    options.ConfigurationOptions = configurationOptions;
+        return await ConnectionMultiplexer.ConnectAsync(configurationOptions); ;
+    };
 
-    options.InstanceName = $"GitHubActionsDashboard-{builder.Environment.EnvironmentName}";
-}));
-
+    options.InstanceName = $"GitHubActionsDashboard:{builder.Environment.EnvironmentName}:";
+});
 
 builder.Services.AddSession(options =>
 {
@@ -113,6 +111,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
 });
 
 builder.Services.AddProblemDetails(options =>
@@ -176,12 +175,31 @@ app.MapOpenApi();
 app.MapGet("/callback/github", CallbackHandler.Handle).ExcludeFromDescription();
 app.MapGet("/login/github", LoginHandler.Handle).ExcludeFromDescription();
 
+app.MapGet("/admin/session/debug", (HttpContext context) =>
+{
+    // Force session to be created/loaded
+    context.Session.SetString("debug-test", DateTime.UtcNow.ToString());
+
+    return Results.Ok(new
+    {
+        sessionId = context.Session.Id,
+        expectedRedisKey = $"GitHubActionsDashboard-{builder.Environment.EnvironmentName}{context.Session.Id}",
+        cookieName = ".GitHub.Session",
+        sessionAvailable = context.Session.IsAvailable
+    });
+});
+
 var api = app.MapGroup(ApiPrefix).WithOpenApi();
 
 api.MapGet("repositories", RepositoriesHandler.Handle);
 api.MapGet("repositories/grouped", GroupedRepositoriesHandler.Handle);
 api.MapPost("workflows", WorkflowsHandler.Handle);
-api.MapPost("workflows/runs", WorkflowRunsHandler.Handle);
+
+api.MapPost("repositories/{owner}/{repo}/workflows/", RepositoriesWorkflowsHandler.Handle)
+    .Produces<IEnumerable<WorkflowModel>>()
+    .WithNames("Get Workflows for a Repository");
+
+api.MapPost("repositories/{owner}/{repo}/workflows/{workflowId}/runs", WorkflowRunsHandler.Handle);
 
 app.UseSecurityHeaders();
 

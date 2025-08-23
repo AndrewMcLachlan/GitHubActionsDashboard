@@ -20,8 +20,8 @@ export const Dashboard = () => {
 
     const { branchFilter } = useDashboardContext();
 
-    const { data: repositories, isLoading, isError, error } = useWorkflowRuns(request, branchFilter);
-    //const { data: repositories, isLoading, isError, error } = useWorkflows(request);
+    //const { data: repositories, isLoading, isError, error } = useWorkflowRuns(request, branchFilter);
+    const { data: repositories, isLoading, isError, error } = useWorkflows(request);
 
     if (isError) {
         console.error("Error fetching dashboard data:", error);

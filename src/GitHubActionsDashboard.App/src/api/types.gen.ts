@@ -193,7 +193,8 @@ export type WorkflowModel = {
 };
 
 export type WorkflowRunModel = {
-    id?: number;
+    id: number;
+    workflowId: number;
     nodeId: string;
     conclusion: NullableOfStringEnumOfWorkflowRunConclusion;
     headBranch: string;
@@ -205,6 +206,10 @@ export type WorkflowRunModel = {
     updatedAt: string;
     htmlUrl: string;
     ragStatus?: RagStatus;
+};
+
+export type WorkflowRunsRequest = {
+    branchFilters?: Array<string>;
 };
 
 export type GetRepositoriesData = {
@@ -255,21 +260,25 @@ export type PostWorkflowsResponses = {
 
 export type PostWorkflowsResponse = PostWorkflowsResponses[keyof PostWorkflowsResponses];
 
-export type PostWorkflowsRunsData = {
-    body: CrossRepositoryRequest;
-    path?: never;
+export type PostRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsData = {
+    body: WorkflowRunsRequest;
+    path: {
+        owner: string;
+        repo: string;
+        workflowId: number;
+    };
     query?: never;
-    url: '/workflows/runs';
+    url: '/repositories/{owner}/{repo}/workflows/{workflowId}/runs';
 };
 
-export type PostWorkflowsRunsResponses = {
+export type PostRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsResponses = {
     /**
      * OK
      */
-    200: Array<RepositoryModel>;
+    200: Array<WorkflowRunModel>;
 };
 
-export type PostWorkflowsRunsResponse = PostWorkflowsRunsResponses[keyof PostWorkflowsRunsResponses];
+export type PostRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsResponse = PostRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsResponses[keyof PostRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsResponses];
 
 export type ClientOptions = {
     baseURL: 'http://localhost:5010/' | (string & {});

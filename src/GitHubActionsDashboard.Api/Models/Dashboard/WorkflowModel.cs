@@ -24,7 +24,7 @@ public record WorkflowModel
     /// </summary>
     public required string HtmlUrl { get; init; }
 
-    public IEnumerable<WorkflowRunModel> Runs { get; init; } = [];
+    public IList<WorkflowRunModel> Runs { get; init; } = [];
 
     public RagStatus RunStatus { get; init; }
 

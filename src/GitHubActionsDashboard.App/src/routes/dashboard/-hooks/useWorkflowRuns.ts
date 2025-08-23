@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { postWorkflowsRunsOptions } from "../../../api/@tanstack/react-query.gen";
+import { postRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsOptions } from "../../../api/@tanstack/react-query.gen";
 
-export const useWorkflowRuns = (repositories: Record<string, string[]>, branchFilters: string[]) => {
+export const useWorkflowRuns = (owner: string, repo: string, workflowId: number, branchFilters: string[]) => {
     return useQuery({
-        ...postWorkflowsRunsOptions({
+        ...postRepositoriesByOwnerByRepoWorkflowsByWorkflowIdRunsOptions({
+            path: {
+                owner,
+                repo,
+                workflowId,
+            },
             body: {
-                 repositories: repositories,
-                 branchFilters: branchFilters,
+                branchFilters: branchFilters,
             }
         }),
         refetchOnWindowFocus: false,

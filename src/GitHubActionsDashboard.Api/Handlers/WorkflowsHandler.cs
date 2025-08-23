@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using GitHubActionsDashboard.Api.Models.Dashboard;
+﻿using GitHubActionsDashboard.Api.Models.Dashboard;
 using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -19,8 +18,8 @@ public static class WorkflowsHandler
         Dictionary<Repository, IEnumerable<WorkflowModel>> workflows = [];
         Dictionary<Repository, Task<IEnumerable<WorkflowModel>>> workflowTasks = [];
 
-        List<Task<WorkflowRunsResponse>> runsTasks = [];
-        List<WorkflowRun> workflowRuns = [];
+        List<Task<IEnumerable<WorkflowRunModel>>> runsTasks = [];
+        List<WorkflowRunModel> workflowRuns = [];
 
         List<RepositoryModel> results = [];
 
@@ -40,47 +39,18 @@ public static class WorkflowsHandler
 
         foreach (var repo in repositories)
         {
+            //foreach (var workflow in repo.Workworkflows[repo].Select(w => w.Id))
             foreach (var workflow in workflows[repo])
             {
-                /*string? branch = null;
-                if (request.BranchFilters.Count() == 1 && !request.BranchFilters.First().Contains('*'))
-                {
-                    branch = request.BranchFilters.First();
-                }*/
-
                 runsTasks.Add(gitHubService.GetLastRunsAsync(repo.Owner.Login, repo.Name, workflow.Id, 1, repo.DefaultBranch, cancellationToken));
-
-                /* //runsTasks.Add(client.Actions.Workflows.Runs.List(repo.Owner.Login, repo.Name, new WorkflowRunsRequest
-                 runsTasks.Add(client.Actions.Workflows.Runs.ListByWorkflow(repo.Owner.Name ?? repo.Owner.Login, repo.Name, workflow.Id, new WorkflowRunsRequest
-                 {
-                     Branch = branch,
-                 },
-                 new ApiOptions
-                 {
-                     PageCount = 1,
-                     PageSize = 20,
-                     StartPage = 1,
-                 }));*/
             }
         }
 
-        try
-        {
-            await Task.WhenAll(runsTasks);
-        }
-        catch (Octokit.ForbiddenException fex)
-        {
-            Console.WriteLine($"Forbidden access to workflow runs");
-            foreach (var header in fex.HttpResponse.Headers)
-            {
-                Console.WriteLine($"{header.Key}: {header.Value}");
-                Debug.WriteLine($"{header.Key}: {header.Value}");
-            }
-        }
+        await Task.WhenAll(runsTasks);
 
-        foreach (var task in runsTasks)
+        foreach (var runTask in runsTasks)
         {
-            workflowRuns.AddRange(task.Result.WorkflowRuns.Where(wr => MatchBranch(wr, request.BranchFilters)));
+            workflowRuns.AddRange(runTask.Result);
         }
 
         foreach (var workflowRepo in workflows)
@@ -91,41 +61,10 @@ public static class WorkflowsHandler
                 Owner = workflowRepo.Key.Owner.Name ?? workflowRepo.Key.Owner.Login,
                 NodeId = workflowRepo.Key.NodeId,
                 HtmlUrl = workflowRepo.Key.HtmlUrl,
-                Workflows = workflowRepo.Value.Select(workflow => new WorkflowModel
-                {
-                    Name = workflow.Name,
-                    Id = workflow.Id,
-                    NodeId = workflow.NodeId,
-                    HtmlUrl = workflow.HtmlUrl,
-                    Runs = workflowRuns.Where(run => run.WorkflowId == workflow.Id).Select(wr => new WorkflowRunModel
-                    {
-                        Id = wr.Id,
-                        NodeId = wr.NodeId,
-                        Conclusion = wr.Conclusion,
-                        CreatedAt = wr.CreatedAt,
-                        Event = wr.Event,
-                        HeadBranch = wr.HeadBranch,
-                        HtmlUrl = wr.HtmlUrl,
-                        RunNumber = wr.RunNumber,
-                        Status = wr.Status,
-                        TriggeringActor = wr.TriggeringActor?.Name ?? wr.TriggeringActor?.Login,
-                        UpdatedAt = wr.UpdatedAt,
-                    })
-                })
+                Workflows = workflowRepo.Value.Select(workflow => workflow with { Runs = [.. workflowRuns.Where(run => run.WorkflowId == workflow.Id)] }),
             });
         }
 
         return TypedResults.Ok(results.AsEnumerable());
-    }
-
-    private static bool MatchBranch(WorkflowRun workflowRun, IEnumerable<string> branchFilters)
-    {
-        if (!branchFilters.Any()) return true;
-
-        if (branchFilters.Contains(workflowRun.HeadBranch)) return true;
-
-        var startsWith = branchFilters.Where(b => b.EndsWith('*')).Select(b => b.Trim('*'));
-
-        return startsWith.Any(workflowRun.HeadBranch.StartsWith);
     }
 }
