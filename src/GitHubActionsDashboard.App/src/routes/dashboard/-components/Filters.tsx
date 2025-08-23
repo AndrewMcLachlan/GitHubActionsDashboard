@@ -22,6 +22,9 @@ export const Filters = () => {
         }
     }
 
+    // TODO: Branch filters are changing.
+    return null;
+
     return (
             <div className="filters">
                 <input type="text" className="form-control branch-filter" placeholder="Branches" onKeyUp={checkInput} onBlur={checkInput} />

@@ -6,18 +6,18 @@ export const WorkflowRunRow: React.FC<WorkflowRunRowProps> = ({ repository, work
 
         const formatter = new Intl.RelativeTimeFormat(navigator.language, { style: 'long' });
 
-    const updatedAt = DateTime.fromISO(run.details.updatedAt!);
+    const updatedAt = DateTime.fromISO(run.updatedAt!);
     const timeAgo = updatedAt.toRelative({ style: 'long' }) || formatter.format(0, 'seconds');
 
     return (
-        <tr key={`${repository.details.owner?.name ?? repository.details.owner?.login}|${repository.details.name}`}>
-            <td><Badge className={run.ragStatus?.toLowerCase()}>{run.details.conclusion}</Badge></td>
-            <td>{workflow.details.name}</td>
-            <td><Badge>{run.details.headBranch}</Badge></td>
-            <td title={DateTime.fromISO(run.details.updatedAt!).toFormat('yyyy-MM-dd HH:mm:ss')}>{timeAgo}</td>
-            <td>{repository.details.owner?.name ?? repository.details.owner?.login}</td>
-            <td>{repository.details.name}</td>
-                <td><a href={repository.details.htmlUrl!} target="_blank" rel="noopener noreferrer">View Run</a></td>
+        <tr key={`${repository.owner}|${repository.name}`}>
+            <td><Badge className={run.ragStatus?.toLowerCase()}>{run.conclusion}</Badge></td>
+            <td>{workflow.name}</td>
+            <td><Badge>{run.headBranch}</Badge></td>
+            <td title={DateTime.fromISO(run.updatedAt!).toFormat('yyyy-MM-dd HH:mm:ss')}>{timeAgo}</td>
+            <td>{repository.owner}</td>
+            <td>{repository.name}</td>
+                <td><a href={repository.htmlUrl!} target="_blank" rel="noopener noreferrer">View Run</a></td>
         </tr>
     );
 };

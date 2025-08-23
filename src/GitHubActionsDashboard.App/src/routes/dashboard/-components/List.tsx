@@ -1,4 +1,5 @@
 import { useWorkflowRuns } from "../-hooks/useWorkflowRuns";
+import { useWorkflows } from "../-hooks/useWorkflows";
 import { useDashboardContext } from "../-providers/DashboardProvider";
 import { Spinner } from "../../../components/Spinner";
 import { useSelectedRepositories } from "../../../hooks/useSelectedRepositories";
@@ -19,7 +20,7 @@ export const List = () => {
 
     const { branchFilter } = useDashboardContext();
 
-    const { data: repositories, isLoading, isError, error } = useWorkflowRuns(request, branchFilter);
+    const { data: repositories, isLoading, isError, error } = useWorkflows(request);
 
     const list = repositories?.flatMap(repo => repo.workflows?.flatMap(workflow => workflow.runs?.flatMap(run => ({
         repo: repo,
@@ -28,7 +29,7 @@ export const List = () => {
     })))) ?? [];
 
     list?.sort((a, b) => {
-        return a!.run.details.updatedAt! > b!.run.details.updatedAt! ? -1 : 1;
+        return a!.run.updatedAt! > b!.run.updatedAt! ? -1 : 1;
     });
 
     return (
@@ -50,7 +51,7 @@ export const List = () => {
                 {(!isLoading && (!repositories || repositories.length === 0)) && <tr><td colSpan={6}>No workflows found.</td></tr>}
                 {list.map((item) => (
                     <WorkflowRunRow
-                        key={item!.run.details.id}
+                        key={item!.run.id}
                         repository={item!.repo}
                         workflow={item!.workflow}
                         run={item!.run}
