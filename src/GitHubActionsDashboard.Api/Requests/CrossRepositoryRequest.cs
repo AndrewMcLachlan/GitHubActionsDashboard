@@ -1,8 +1,6 @@
-﻿namespace GitHubActionsDashboard.Api.Handlers;
+﻿namespace GitHubActionsDashboard.Api.Requests;
 
 public record CrossRepositoryRequest
 {
     public Dictionary<string, List<string>> Repositories { get; init;  } = [];
-
-    public IEnumerable<string> BranchFilters { get; init; } = [];
 }

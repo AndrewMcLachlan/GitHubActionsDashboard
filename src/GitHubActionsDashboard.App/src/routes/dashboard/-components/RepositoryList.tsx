@@ -1,4 +1,4 @@
-import type { RepositoryModel } from "../../../api";
+import type { RepositoryModel2 } from "../../../api";
 import { RepositoryCard } from "./RepositoryCard";
 
 export const RepositoryList: React.FC<RepositoryListProps> = ({repositories}) => {
@@ -14,5 +14,5 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({repositories}) =>
     );
 }
 export interface RepositoryListProps {
-    repositories: RepositoryModel[]
+    repositories: RepositoryModel2[]
 }

@@ -1,140 +1,13 @@
 ﻿using System.Net;
 using System.Text.Json;
-using GitHubActionsDashboard.Api.Models.Dashboard;
 using Microsoft.Extensions.Caching.Distributed;
 using Octokit;
 
 namespace GitHubActionsDashboard.Api.Services;
 
-public interface IGitHubService
+internal abstract class GitHubService(IDistributedCache cache, ILogger logger)
 {
-    Task<IEnumerable<WorkflowModel>> GetWorkflowsAsync(string owner, string repo, CancellationToken cancellationToken);
-
-    Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken);
-
-    Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, IEnumerable<string> branches, CancellationToken cancellationToken);
-}
-
-internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache, ICacheKeyService cacheKeyService) : IGitHubService
-{
-    private readonly SemaphoreSlim _gate = new(8);
-
-    public async Task<IEnumerable<WorkflowModel>> GetWorkflowsAsync(string owner, string repo, CancellationToken cancellationToken)
-    {
-        var cacheKey = cacheKeyService.GetCacheKey($"gh:workflows:{owner}/{repo}");
-
-        var cachedWorkflows = await TryGetFromCache(cacheKey, cancellationToken);
-        if (cachedWorkflows != null)
-        {
-            return cachedWorkflows;
-        }
-
-        await _gate.WaitAsync(cancellationToken);
-        try
-        {
-            await Jitter(cancellationToken);
-            var response = await OctoCall(() => gitHubClient.Actions.Workflows.List(owner, repo), cancellationToken);
-
-            var workflows = response.Workflows.ToWorkflowModel();
-
-            await TryCacheWorkflows(cacheKey, workflows, cancellationToken);
-
-            return workflows;
-        }
-        finally
-        {
-            _gate.Release();
-        }
-    }
-
-    public async Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, string? branch, CancellationToken cancellationToken)
-    {
-        await _gate.WaitAsync(cancellationToken);
-        try
-        {
-            await Jitter(cancellationToken);
-            var req = new Octokit.WorkflowRunsRequest
-            {
-                Branch = branch,
-
-            };
-
-            var response = await OctoCall(() =>
-                gitHubClient.Actions.Workflows.Runs.ListByWorkflow(owner, repo, workflowId, req,
-                    new ApiOptions
-                    {
-                        PageCount = 1,
-                        PageSize = perPage,
-                        StartPage = 1,
-                    }), cancellationToken);
-
-            return response.WorkflowRuns.Select(wr => new WorkflowRunModel()
-            {
-                Id = wr.Id,
-                WorkflowId = wr.WorkflowId,
-                NodeId = wr.NodeId,
-                Conclusion = wr.Conclusion,
-                CreatedAt = wr.CreatedAt,
-                Event = wr.Event,
-                HeadBranch = wr.HeadBranch,
-                HtmlUrl = wr.HtmlUrl,
-                RunNumber = wr.RunNumber,
-                Status = wr.Status,
-                TriggeringActor = wr.TriggeringActor?.Name ?? wr.TriggeringActor?.Login,
-                UpdatedAt = wr.UpdatedAt,
-            });
-        }
-        finally { _gate.Release(); }
-    }
-
-    public async Task<IEnumerable<WorkflowRunModel>> GetLastRunsAsync(string owner, string repo, long workflowId, int perPage, IEnumerable<string> branches, CancellationToken cancellationToken)
-    {
-        await _gate.WaitAsync(cancellationToken);
-        try
-        {
-            string? branch = null;
-            if (branches.Count() == 1 && !branches.First().Contains('*'))
-            {
-                branch = branches.First();
-            }
-
-            await Jitter(cancellationToken);
-            var req = new Octokit.WorkflowRunsRequest
-            {
-                Branch = branch,
-            };
-
-            var response = await OctoCall(() =>
-                gitHubClient.Actions.Workflows.Runs.ListByWorkflow(owner, repo, workflowId, req,
-                    new ApiOptions
-                    {
-                        PageCount = 1,
-                        PageSize = perPage,
-                        StartPage = 1,
-                    }), cancellationToken);
-
-            return response.WorkflowRuns
-                .Where(wr => MatchBranch(wr, branches))
-                .Select(wr => new WorkflowRunModel()
-                {
-                    Id = wr.Id,
-                    WorkflowId = wr.WorkflowId,
-                    NodeId = wr.NodeId,
-                    Conclusion = wr.Conclusion,
-                    CreatedAt = wr.CreatedAt,
-                    Event = wr.Event,
-                    HeadBranch = wr.HeadBranch,
-                    HtmlUrl = wr.HtmlUrl,
-                    RunNumber = wr.RunNumber,
-                    Status = wr.Status,
-                    TriggeringActor = wr.TriggeringActor?.Name ?? wr.TriggeringActor?.Login,
-                    UpdatedAt = wr.UpdatedAt,
-                });
-        }
-        finally { _gate.Release(); }
-    }
-
-    private static async Task<T> OctoCall<T>(Func<Task<T>> operation, CancellationToken cancellationToken, int maxAttempts = 4)
+    protected static async Task<T> OctoCall<T>(Func<Task<T>> operation, CancellationToken cancellationToken, int maxAttempts = 4)
     {
         const int baseMs = 250;
         const int capMs = 8000;
@@ -194,10 +67,10 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
         }
     }
 
-    private static Task Jitter(CancellationToken cancellationToken) =>
+    protected static Task Jitter(CancellationToken cancellationToken) =>
         Task.Delay(Random.Shared.Next(0, 200), cancellationToken);
 
-    private async Task<IEnumerable<WorkflowModel>?> TryGetFromCache(string cacheKey, CancellationToken cancellationToken)
+    protected async Task<IEnumerable<T>?> TryGetFromCache<T>(string cacheKey, CancellationToken cancellationToken)
     {
         try
         {
@@ -205,7 +78,7 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
             if (String.IsNullOrEmpty(cachedJson))
                 return null;
 
-            return JsonSerializer.Deserialize<IEnumerable<WorkflowModel>>(cachedJson);
+            return JsonSerializer.Deserialize<IEnumerable<T>>(cachedJson);
         }
         catch (JsonException)
         {
@@ -220,7 +93,7 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
         }
     }
 
-    private async Task TryCacheWorkflows(string cacheKey, IEnumerable<WorkflowModel> workflows, CancellationToken cancellationToken)
+    protected async Task TryCache<T>(string cacheKey, IEnumerable<T> workflows, CancellationToken cancellationToken)
     {
         try
         {
@@ -230,26 +103,13 @@ internal class GitHubService(IGitHubClient gitHubClient, IDistributedCache cache
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             }, cancellationToken);
         }
-        catch (JsonException)
+        catch (JsonException jex)
         {
-            // Serialization failed, log but don't fail the request
-            // TODO: Add logging
+            logger.LogError(jex, "Failed to serialize data for caching key: {Key}", cacheKey);
         }
-        catch (InvalidOperationException)
+        catch (StackExchange.Redis.RedisException rex)
         {
-            // Redis connection issue, continue without caching
-            // TODO: Add logging
+            logger.LogError(rex, "Error caching to redis: {Key}", cacheKey);
         }
-    }
-
-    private static bool MatchBranch(WorkflowRun workflowRun, IEnumerable<string> branchFilters)
-    {
-        if (!branchFilters.Any()) return true;
-
-        if (branchFilters.Contains(workflowRun.HeadBranch)) return true;
-
-        var startsWith = branchFilters.Where(b => b.EndsWith('*')).Select(b => b.Trim('*'));
-
-        return startsWith.Any(workflowRun.HeadBranch.StartsWith);
     }
 }

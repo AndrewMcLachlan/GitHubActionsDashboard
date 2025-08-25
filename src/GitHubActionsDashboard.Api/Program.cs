@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Identity;
@@ -15,6 +16,7 @@ using Octokit.Caching;
 using StackExchange.Redis;
 
 const string ApiPrefix = "/api";
+const string SessionKeyFormat = "gad:{0}:";
 
 return Asm.AspNetCore.WebApplicationStart.Run(args, "GitHubActionsDashboard.Api", AddServices, AddApp, AddHealthChecks);
 
@@ -61,9 +63,11 @@ static void AddServices(WebApplicationBuilder builder)
 
     builder.Services.AddHttpContextAccessor();
 
-    builder.Services.AddScoped<IGitHubService, GitHubService>();
+    builder.Services.AddScoped<IDashboardService, DashboardService>();
+    builder.Services.AddScoped<ISettingsService, SettingsService>();
     builder.Services.AddSingleton<ICacheKeyService, CacheKeyService>();
     builder.Services.AddSingleton<IResponseCache, DistributedResponseCache>();
+
     builder.Services.AddOpenApi("v1", options =>
     {
         options.AddSchemaTransformer<StringEnumSchemaTransformer>();
@@ -86,25 +90,34 @@ static void AddServices(WebApplicationBuilder builder)
         });
     });
 
-    builder.Services.AddStackExchangeRedisCache(options =>
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+
+    if (!String.IsNullOrEmpty(redisConnectionString))
     {
-        options.ConnectionMultiplexerFactory = async () =>
+        builder.Services.AddStackExchangeRedisCache(options =>
         {
-            var connectionString = builder.Configuration.GetConnectionString("Redis");
+            options.ConnectionMultiplexerFactory = async () =>
+            {
+                var connectionString = builder.Configuration.GetConnectionString("Redis");
 
-            var configurationOptions = ConfigurationOptions.Parse(connectionString!);
-            configurationOptions.AbortOnConnectFail = false;
-            configurationOptions.ConnectTimeout = 10000;
-            configurationOptions.SyncTimeout = 5000;
-            configurationOptions.ConnectRetry = 3;
+                var configurationOptions = ConfigurationOptions.Parse(connectionString!);
+                configurationOptions.AbortOnConnectFail = false;
+                configurationOptions.ConnectTimeout = 10000;
+                configurationOptions.SyncTimeout = 5000;
+                configurationOptions.ConnectRetry = 3;
 
-            await configurationOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
+                await configurationOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
 
-            return await ConnectionMultiplexer.ConnectAsync(configurationOptions); ;
-        };
+                return await ConnectionMultiplexer.ConnectAsync(configurationOptions); ;
+            };
 
-        options.InstanceName = $"GitHubActionsDashboard:{builder.Environment.EnvironmentName}:";
-    });
+            options.InstanceName = String.Format(CultureInfo.InvariantCulture, SessionKeyFormat, builder.Environment.EnvironmentName);
+        });
+    }
+    else
+    {
+        builder.Services.AddDistributedMemoryCache();
+    }
 
     builder.Services.AddSession(options =>
     {
@@ -176,7 +189,7 @@ static void AddApp(WebApplication app)
     app.MapGet("/callback/github", CallbackHandler.Handle).ExcludeFromDescription();
     app.MapGet("/login/github", LoginHandler.Handle).ExcludeFromDescription();
 
-    app.MapGet("/admin/session/debug", (HttpContext context) =>
+    app.MapGet("/admin/session/debug", (ICacheKeyService service, HttpContext context) =>
     {
         // Force session to be created/loaded
         context.Session.SetString("debug-test", DateTime.UtcNow.ToString());
@@ -184,7 +197,8 @@ static void AddApp(WebApplication app)
         return Results.Ok(new
         {
             sessionId = context.Session.Id,
-            expectedRedisKey = $"GitHubActionsDashboard-{app.Environment.EnvironmentName}{context.Session.Id}",
+            expectedSessionKey= String.Format(CultureInfo.InvariantCulture, SessionKeyFormat, app.Environment.EnvironmentName),
+            expectedRedisKey = service.GetCacheKey(String.Empty),
             cookieName = ".GitHub.Session",
             sessionAvailable = context.Session.IsAvailable
         });

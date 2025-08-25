@@ -14,6 +14,7 @@ export default defineConfig({
     port: 3010,
     proxy: {
       "/api": "http://localhost:5010",
+      "/admin/session": "http://localhost:5010",
       "/login": "http://localhost:5010",
       "/callback": "http://localhost:5010",
     }

@@ -2,7 +2,7 @@ import { useWorkflowRuns } from "../-hooks/useWorkflowRuns";
 import { useWorkflows } from "../-hooks/useWorkflows";
 import { useDashboardContext } from "../-providers/DashboardProvider";
 import { Spinner } from "../../../components/Spinner";
-import { useSelectedRepositories } from "../../../hooks/useSelectedRepositories";
+import { useSelectedRepositories } from "../../settings/-hooks/useSelectedRepositories";
 import { WorkflowRunRow } from "./WorkflowRunRow";
 
 export const List = () => {

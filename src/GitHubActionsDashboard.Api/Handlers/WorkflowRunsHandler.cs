@@ -8,7 +8,7 @@ namespace GitHubActionsDashboard.Api.Handlers;
 
 public static class WorkflowRunsHandler
 {
-    public static async Task<Ok<IEnumerable<WorkflowRunModel>>> Handle([FromServices] IGitHubService gitHubService, [FromRoute] string owner, [FromRoute] string repo, [FromRoute] long workflowId, Requests.WorkflowRunsRequest request, CancellationToken cancellationToken)
+    public static async Task<Ok<IEnumerable<WorkflowRunModel>>> Handle([FromServices] IDashboardService gitHubService, [FromRoute] string owner, [FromRoute] string repo, [FromRoute] long workflowId, Requests.WorkflowRunsRequest request, CancellationToken cancellationToken)
     {
         List<WorkflowRunModel> workflowRuns = [];
 

@@ -1,4 +1,5 @@
 ﻿#pragma warning disable CS9113
+using GitHubActionsDashboard.Api.Models;
 using GitHubActionsDashboard.Api.Models.Dashboard;
 using Octokit.GraphQL;
 

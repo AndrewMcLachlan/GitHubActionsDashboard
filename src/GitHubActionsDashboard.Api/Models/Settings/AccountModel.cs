@@ -1,6 +1,6 @@
 ﻿namespace GitHubActionsDashboard.Api.Models.Settings;
 
-public record Account
+public record AccountModel
 {
     public required string Login { get; init; }
 
@@ -10,5 +10,5 @@ public record Account
 
     public Octokit.AccountType? Type { get; init; }
 
-    public IEnumerable<Repository> Repositories { get; init; } = [];
+    public IList<RepositoryModel> Repositories { get; init; } = [];
 }

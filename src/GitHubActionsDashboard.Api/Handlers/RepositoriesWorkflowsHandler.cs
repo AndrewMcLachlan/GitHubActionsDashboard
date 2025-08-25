@@ -8,7 +8,7 @@ namespace GitHubActionsDashboard.Api.Handlers;
 
 public static class RepositoriesWorkflowsHandler
 {
-    public static async Task<Ok<IEnumerable<WorkflowModel>>> Handle([FromServices] IGitHubService gitHubService, [FromRoute] string owner, [FromRoute] string repo, [FromBody] BranchFilterRequest request, CancellationToken cancellationToken)
+    public static async Task<Ok<IEnumerable<WorkflowModel>>> Handle([FromServices] IDashboardService gitHubService, [FromRoute] string owner, [FromRoute] string repo, [FromBody] BranchFilterRequest request, CancellationToken cancellationToken)
     {
         Dictionary<WorkflowModel, Task<IEnumerable<WorkflowRunModel>>> runsTasks = [];
 

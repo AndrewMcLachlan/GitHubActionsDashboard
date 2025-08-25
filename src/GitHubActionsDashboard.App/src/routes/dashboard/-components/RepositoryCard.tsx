@@ -1,5 +1,5 @@
 import { Icon } from "@andrewmclachlan/moo-ds";
-import type { RepositoryModel } from "../../../api";
+import type { RepositoryModel, RepositoryModel2 } from "../../../api";
 import { Collapsible } from "./Collapsible";
 import RagStatus from "./RagStatus";
 import { WorkflowList } from "./WorkflowList";
@@ -19,5 +19,5 @@ export const RepositoryCard: React.FC<RepositoryCardProps> = ({ repository }) =>
 }
 
 export interface RepositoryCardProps {
-    repository: RepositoryModel
+    repository: RepositoryModel2
 }

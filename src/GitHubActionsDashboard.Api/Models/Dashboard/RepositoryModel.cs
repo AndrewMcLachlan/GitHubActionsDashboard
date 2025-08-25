@@ -2,16 +2,8 @@
 
 namespace GitHubActionsDashboard.Api.Models.Dashboard;
 
-public record RepositoryModel
+public record RepositoryModel : Models.RepositoryBase
 {
-    public required string Name { get; init; }
-
-    public required string Owner { get; init; }
-
-    public required string NodeId { get; init; }
-
-    public required string HtmlUrl { get; init; }
-
     public RagStatus OverallStatus
     {
         get

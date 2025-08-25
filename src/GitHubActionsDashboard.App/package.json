@@ -12,7 +12,7 @@
     "generate": "openapi-ts"
   },
   "dependencies": {
-    "@andrewmclachlan/moo-ds": "^3.0.987",
+    "@andrewmclachlan/moo-ds": "^3.0.1006",
     "@andrewmclachlan/moo-icons": "^3.0.987",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-router": "^1.130.1",
