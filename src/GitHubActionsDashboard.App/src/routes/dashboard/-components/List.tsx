@@ -1,4 +1,3 @@
-import { useWorkflowRuns } from "../-hooks/useWorkflowRuns";
 import { useWorkflows } from "../-hooks/useWorkflows";
 import { useDashboardContext } from "../-providers/DashboardProvider";
 import { Spinner } from "../../../components/Spinner";
@@ -18,9 +17,7 @@ export const List = () => {
         return acc;
     }, {} as Record<string, string[]>);
 
-    const { branchFilter } = useDashboardContext();
-
-    const { data: repositories, isLoading, isError, error } = useWorkflows(request);
+    const { data: repositories, isLoading, isError, error } = useWorkflows();
 
     const list = repositories?.flatMap(repo => repo.workflows?.flatMap(workflow => workflow.runs?.flatMap(run => ({
         repo: repo,
