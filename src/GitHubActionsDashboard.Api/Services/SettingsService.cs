@@ -74,7 +74,7 @@ internal class SettingsService(IGitHubClient gitHubClient, IDistributedCache cac
 
                 if (response.TotalCount == 0) continue;
                 var repo = results.SelectMany(r => r.Repositories).Single(r => r.NodeId == repoWorkflows.Key);
-                repo.Workflows.AddRange(response.Workflows.ToWorkflowBase());
+                repo.Workflows.AddRange(response.Workflows.OrderBy(wf => wf.Name).ToWorkflowBase());
             }
 
             await TryCache(cacheKey, results, cancellationToken);

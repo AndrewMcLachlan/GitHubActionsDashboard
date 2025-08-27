@@ -74,7 +74,7 @@ internal class DashboardService(IGitHubClient gitHubClient, IDistributedCache ca
                 Owner = workflowRepo.Key.Owner.Name ?? workflowRepo.Key.Owner.Login,
                 NodeId = workflowRepo.Key.NodeId,
                 HtmlUrl = workflowRepo.Key.HtmlUrl,
-                Workflows = workflowRepo.Value.Select(workflow => workflow with { Runs = [.. workflowRuns.Where(run => run.WorkflowId == workflow.Id)] }),
+                Workflows = workflowRepo.Value.Select(workflow => workflow with { Runs = [.. workflowRuns.Where(run => run.WorkflowId == workflow.Id)] }).OrderBy(workflow => workflow.Name),
             });
         }
 
