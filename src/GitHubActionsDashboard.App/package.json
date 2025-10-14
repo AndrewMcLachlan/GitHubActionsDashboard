@@ -26,19 +26,19 @@
     "use-debounce": "^10.0.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.30.1",
+    "@eslint/js": "^9.37.0",
     "@hey-api/client-axios": "^0.9.1",
-    "@hey-api/openapi-ts": "^0.80.1",
-    "@tanstack/router-plugin": "^1.130.1",
+    "@hey-api/openapi-ts": "^0.85.2",
+    "@tanstack/router-plugin": "^1.132.56",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "@vitejs/plugin-react-swc": "^3.10.2",
-    "eslint": "^9.30.1",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.3.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.35.1",
+    "@vitejs/plugin-react-swc": "^4.1.0",
+    "eslint": "^9.37.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-refresh": "^0.4.23",
+    "globals": "^16.4.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.1",
     "vite": "^7.0.4"
   }
 }
