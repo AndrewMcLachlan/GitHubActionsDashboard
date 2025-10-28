@@ -60,7 +60,7 @@ jobs:
     - name: Copy App
       run: cp -r src/GitHubActionsDashboard.App/dist ${{ github.workspace }}/publish/wwwroot
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: publish
         path: ${{ github.workspace }}/publish
