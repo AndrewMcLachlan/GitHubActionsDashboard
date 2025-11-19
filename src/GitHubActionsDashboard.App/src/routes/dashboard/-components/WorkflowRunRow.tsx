@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import type { RepositoryModel2, WorkflowModel, WorkflowRunModel } from "../../../api";
+import type { RepositoryModel, WorkflowModel, WorkflowRunModel } from "../../../api";
 import { Badge } from "./Badge";
 
 export const WorkflowRunRow: React.FC<WorkflowRunRowProps> = ({ repository, workflow, run }) => {
@@ -23,7 +23,7 @@ export const WorkflowRunRow: React.FC<WorkflowRunRowProps> = ({ repository, work
 };
 
 export interface WorkflowRunRowProps {
-    repository: RepositoryModel2;
+    repository: RepositoryModel;
     workflow: WorkflowModel;
     run: WorkflowRunModel;
 }

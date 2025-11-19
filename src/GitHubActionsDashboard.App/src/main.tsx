@@ -13,6 +13,7 @@ import { routeTree } from './routeTree.gen'
 import { Spinner } from "./components/Spinner"
 import { LinkProvider } from "@andrewmclachlan/moo-ds"
 import { NavLnk } from "./components/NavLink"
+import { client } from "./api/client.gen.ts"
 
 library.add(faArrowUpRightFromSquare, faBarsStaggered, faChevronRight, faListUl, faTimesCircle);
 
@@ -29,6 +30,8 @@ declare module "@tanstack/react-router" {
         router: typeof router
     }
 }
+
+console.log("config", client.getConfig());
 
 const queryClient = new QueryClient();
 

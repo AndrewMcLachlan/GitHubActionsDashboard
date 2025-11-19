@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export interface SelectedRepository {
     owner: string;
     name: string;
-    workflows?: number[];
+    workflows?: (number | string)[];
 }
 
 export const useSelectedRepositories = () => {

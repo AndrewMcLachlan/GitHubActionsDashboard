@@ -1,16 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { postWorkflowsOptions } from "../../../api/@tanstack/react-query.gen";
 import { useSelectedRepositories } from "../../settings/-hooks/useSelectedRepositories";
+import { postWorkflows } from "../../../api";
 
 export const useWorkflows = () => {
 
     const { data: selectedRepositories } = useSelectedRepositories();
 
     return useQuery({
-        ...postWorkflowsOptions({
-            body: {
-                 repositories: selectedRepositories
-            }
-        })
+        queryKey: ["getWorkflows", selectedRepositories],
+        queryFn: async () => {
+            var result = await postWorkflows({
+                body: {
+                    repositories: selectedRepositories
+                }
+            })
+            return result.data;
+        },
     });
 }

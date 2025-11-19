@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Octokit;
 
 namespace GitHubActionsDashboard.Api.OpenApi;
@@ -10,7 +10,7 @@ public class StringEnumSchemaTransformer : IOpenApiSchemaTransformer
     {
         if (IsStringEnumSchema(context))
         {
-            schema.Type = "string";
+            schema.Type = JsonSchemaType.String;
             schema.Properties?.Clear();
             schema.AllOf?.Clear();
             schema.OneOf?.Clear();

@@ -11,6 +11,7 @@ using GitHubActionsDashboard.Api.Serialisation;
 using GitHubActionsDashboard.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.OpenApi;
 using Octokit;
 using Octokit.Caching;
 using StackExchange.Redis;
@@ -61,8 +62,6 @@ static void AddServices(WebApplicationBuilder builder)
         return new GitHubClient(connection);
     });
 
-    builder.Services.AddHttpContextAccessor();
-
     builder.Services.AddScoped<IDashboardService, DashboardService>();
     builder.Services.AddScoped<ISettingsService, SettingsService>();
     builder.Services.AddSingleton<ICacheKeyService, CacheKeyService>();
@@ -70,15 +69,17 @@ static void AddServices(WebApplicationBuilder builder)
 
     builder.Services.AddOpenApi("v1", options =>
     {
+        options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_1;
         options.AddSchemaTransformer<StringEnumSchemaTransformer>();
         options.AddDocumentTransformer((document, context, cancellationToken) =>
         {
             // Remove /api prefix from all paths
-            var newPaths = new Dictionary<string, Microsoft.OpenApi.Models.OpenApiPathItem>();
+            var newPaths = new Dictionary<string, IOpenApiPathItem>();
             foreach (var path in document.Paths)
             {
-                var newPath = path.Key.StartsWith(ApiPrefix) ? path.Key[ApiPrefix.Length..] : path.Key;
-                newPaths[newPath] = path.Value;
+                var newPath = path.Key.StartsWith(ApiPrefix) ? new KeyValuePair<string, IOpenApiPathItem>(path.Key[ApiPrefix.Length..], path.Value) : path;
+                newPaths.Add(path.Key.StartsWith(ApiPrefix) ? path.Key[ApiPrefix.Length..] : path.Key, path.Value);
+               
             }
             document.Paths.Clear();
             foreach (var path in newPaths)
@@ -197,14 +198,14 @@ static void AddApp(WebApplication app)
         return Results.Ok(new
         {
             sessionId = context.Session.Id,
-            expectedSessionKey= String.Format(CultureInfo.InvariantCulture, SessionKeyFormat, app.Environment.EnvironmentName),
+            expectedSessionKey = String.Format(CultureInfo.InvariantCulture, SessionKeyFormat, app.Environment.EnvironmentName),
             expectedRedisKey = service.GetCacheKey(String.Empty),
             cookieName = ".GitHub.Session",
             sessionAvailable = context.Session.IsAvailable
         });
     });
 
-    var api = app.MapGroup(ApiPrefix).WithOpenApi();
+    var api = app.MapGroup(ApiPrefix);
 
     api.MapGet("repositories", RepositoriesHandler.Handle);
     api.MapGet("repositories/grouped", GroupedRepositoriesHandler.Handle);
