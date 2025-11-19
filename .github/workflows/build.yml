@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: read
-      pull-requests: write
+    outputs:
+      version: ${{ steps.set-version-number.outputs.version }}
     steps:
     - uses: actions/checkout@v5
     - name: Setup .NET
