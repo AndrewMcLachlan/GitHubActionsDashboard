@@ -120,7 +120,7 @@ jobs:
       app-name: githubactionsdashboard
       resource-group: GitHubActionsDashboard
       slot-name: staging
-      container-image: ghcr.io/andrewmclachlan/gad:${{needs.build.outputs.version}}
+      container-image: ghcr.io/andrewmclachlan/githubactionsdashboard:${{needs.build.outputs.version}}
       container-name: main
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
