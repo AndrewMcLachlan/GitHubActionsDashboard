@@ -68,7 +68,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./src/githubactionsdashboard.Api/Dockerfile
+        file: ./src/GitHubActionsDashboard.Api/Dockerfile
         push: false
         tags: |
           ghcr.io/andrewmclachlan/githubactionsdashboard:${{steps.set-version-number.outputs.version}}
@@ -98,7 +98,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./src/githubactionsdashboard.Api/Dockerfile
+        file: ./src/GitHubActionsDashboard.Api/Dockerfile
         push: true
         tags: |
           ghcr.io/andrewmclachlan/githubactionsdashboard:${{needs.build.outputs.version}}
