@@ -12,11 +12,11 @@
     "generate": "openapi-ts"
   },
   "dependencies": {
-    "@andrewmclachlan/moo-ds": "^3.0.1061",
-    "@andrewmclachlan/moo-icons": "^3.0.1061",
-    "@tanstack/react-query": "^5.90.5",
-    "@tanstack/react-router": "^1.133.32",
-    "@tanstack/react-router-devtools": "^1.133.32",
+    "@andrewmclachlan/moo-ds": "^3.0.1080",
+    "@andrewmclachlan/moo-icons": "^3.0.1080",
+    "@tanstack/react-query": "^5.90.10",
+    "@tanstack/react-router": "^1.136.11",
+    "@tanstack/react-router-devtools": "^1.136.11",
     "@types/luxon": "^3.7.1",
     "axios": "^1.13.0",
     "luxon": "^3.7.2",
