@@ -12,17 +12,17 @@
     "generate": "openapi-ts"
   },
   "dependencies": {
-    "@andrewmclachlan/moo-ds": "^3.0.1084",
-    "@andrewmclachlan/moo-icons": "^3.0.1084",
-    "@tanstack/react-query": "^5.90.10",
-    "@tanstack/react-router": "^1.139.3",
-    "@tanstack/react-router-devtools": "^1.139.3",
+    "@andrewmclachlan/moo-ds": "^3.0.1092",
+    "@andrewmclachlan/moo-icons": "^3.0.1092",
+    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-router": "^1.140.0",
+    "@tanstack/react-router-devtools": "^1.140.0",
     "@types/luxon": "^3.7.1",
     "axios": "^1.13.0",
     "luxon": "^3.7.2",
     "oauth4webapi": "^3.8.3",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "use-debounce": "^10.0.5"
   },
   "devDependencies": {
