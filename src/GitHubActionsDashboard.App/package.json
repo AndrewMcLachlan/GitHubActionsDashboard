@@ -28,8 +28,8 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@hey-api/client-axios": "^0.9.1",
-    "@hey-api/openapi-ts": "^0.90.3",
-    "@tanstack/router-plugin": "^1.149.0",
+    "@hey-api/openapi-ts": "^0.90.4",
+    "@tanstack/router-plugin": "^1.153.1",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.2",
@@ -38,7 +38,7 @@
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^17.0.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.53.0",
+    "typescript-eslint": "^8.53.1",
     "vite": "^7.3.1"
   }
 }
