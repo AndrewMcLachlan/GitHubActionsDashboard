@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { clearQueryCacheSnapshot } from "../queryCachePersistence";
 
 export const UserMenu = () => {
   const { data: user } = useCurrentUser();
@@ -23,9 +24,11 @@ export const UserMenu = () => {
     try {
       await fetch("/logout", { method: "POST", credentials: "include" });
     } finally {
-      // Drop all cached data tied to the previous session, then send the
-      // user back to the marketing/home page.
+      // Drop all cached data tied to the previous session — in memory and the
+      // persisted snapshot, which outlives the page — then send the user back
+      // to the marketing/home page.
       queryClient.clear();
+      clearQueryCacheSnapshot(localStorage);
       window.location.href = "/";
     }
   };

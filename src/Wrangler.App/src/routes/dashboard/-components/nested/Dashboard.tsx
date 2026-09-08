@@ -11,10 +11,15 @@ export const Dashboard = () => {
     return <p>Error loading build info.</p>;
   }
 
+  // Cached data — restored from the last visit, or kept from the previous filter
+  // — renders while the refetch happens behind it, so the spinner is only for a
+  // genuinely cold start with nothing to show.
+  const showSpinner = isLoading && !repositories;
+
   return (
     <>
-      {isLoading && <Spinner />}
-      {(!isLoading && (!repositories || repositories.length === 0)) && <p>No workflows found.</p>}
+      {showSpinner && <Spinner />}
+      {(!showSpinner && (!repositories || repositories.length === 0)) && <p>No workflows found.</p>}
       {repositories && <RepositoryList repositories={repositories} />}
     </>
   );

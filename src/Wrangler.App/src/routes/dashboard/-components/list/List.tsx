@@ -87,13 +87,17 @@ export const List = () => {
     ) ?? []
   ) ?? [];
 
+  // As on the other two views: only a cold start with nothing cached shows a
+  // loading state; a refetch happens behind the rows already on screen.
+  const showLoading = isLoading && !repositories;
+
   return (
     <DataGrid
       className="workflow-run-table"
       data={list}
       columns={columns}
       sortable
-      loading={isLoading}
+      loading={showLoading}
       emptyMessage="No workflows found."
     />
   );
