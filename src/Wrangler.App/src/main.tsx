@@ -43,10 +43,8 @@ console.log("config", client.getConfig());
 // defaults; hooks still override where their freshness contract differs.
 const queryClient = new QueryClient({ defaultOptions: { queries: QUERY_DEFAULTS } });
 
-// The cache above is memory only, so a reload or a PWA relaunch would otherwise
-// start from a spinner. Restoring before the first render puts the last seen
-// dashboard on screen immediately; the restored queries are marked stale, so
-// each refetches the moment its page mounts.
+// Must stay ahead of the render below — a restore after it cannot spare the
+// first paint its spinner.
 restoreQueryCache(queryClient, localStorage);
 startPersistingQueryCache(queryClient, localStorage);
 

@@ -3,14 +3,8 @@ import type { StorageLike } from "./routes/settings/-hooks/repositoryFeatures";
 
 /**
  * Snapshots the query cache into localStorage and restores it before the first
- * render.
- *
- * QUERY_DEFAULTS already keeps data alive for a whole day, so navigating around
- * the app never re-shows a spinner — but that cache is memory only. A reload, a
- * PWA relaunch, or the browser discarding a background tab throws it away, and
- * the dashboard is back to a spinner and a cold fetch of every selected
- * workflow. Persisting it means the last rendered dashboard is on screen
- * immediately on the next visit, with the refetch happening behind it.
+ * render, so the last rendered dashboard is on screen immediately on the next
+ * visit while its refetch runs behind it.
  */
 
 export const QUERY_CACHE_STORAGE_KEY = "wrangler.queryCache";
@@ -18,29 +12,19 @@ export const QUERY_CACHE_STORAGE_KEY = "wrangler.queryCache";
 /** Bump when the persisted shape changes; older snapshots are then discarded. */
 export const QUERY_CACHE_VERSION = 1;
 
-/**
- * Beyond this a snapshot is dropped rather than restored. Matches the gcTime in
- * QUERY_DEFAULTS: showing a day-old build status briefly is the point, showing
- * a week-old one is just misleading.
- */
+/** Snapshots older than this are discarded. Matches the gcTime in QUERY_DEFAULTS. */
 export const QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
 /**
- * localStorage is a ~5MB budget shared with the app's settings (which matter
- * far more than this cache), so an oversized snapshot is skipped rather than
- * risking a quota error that could take a setting write down with it.
+ * localStorage is a ~5MB budget shared with the app's settings; an oversized
+ * snapshot is skipped so it can never cost a settings write.
  */
 export const QUERY_CACHE_MAX_CHARS = 2_000_000;
 
 /** Coalesces the burst of cache events a fetch or a stream push produces. */
 const PERSIST_DEBOUNCE_MS = 1000;
 
-/**
- * Root query keys worth restoring: the list pages whose data costs a GitHub
- * call per selected workflow/repo and which the SSE stream keeps current.
- * Everything else (the signed-in user, user search, values read straight from
- * localStorage) is either cheap, ephemeral, or already synchronous.
- */
+/** Root query keys whose data is worth restoring. */
 export const PERSISTED_QUERY_KEYS = [
   "getWorkflows",
   "getWorkflowRuns",
@@ -62,8 +46,8 @@ const isPersistable = (query: Query): boolean => {
 };
 
 /**
- * Writes the persistable part of the cache to storage. Returns whether anything
- * was stored — a failure is never fatal, it only costs the next visit a spinner.
+ * Writes the persistable part of the cache to storage. A failure only costs the
+ * next visit a spinner.
  */
 export const saveQueryCache = (queryClient: QueryClient, storage: StorageLike): boolean => {
   const state = dehydrate(queryClient, {
@@ -72,8 +56,7 @@ export const saveQueryCache = (queryClient: QueryClient, storage: StorageLike): 
   });
 
   if (state.queries.length === 0) {
-    // Nothing worth restoring (e.g. the user cleared every repo): drop the old
-    // snapshot rather than leave it to be restored on top of the new reality.
+    // Drop the old snapshot so it can't outlive the state it described.
     storage.removeItem(QUERY_CACHE_STORAGE_KEY);
     return false;
   }
@@ -93,27 +76,23 @@ export const saveQueryCache = (queryClient: QueryClient, storage: StorageLike): 
     storage.setItem(QUERY_CACHE_STORAGE_KEY, json);
     return true;
   } catch {
-    // Quota exceeded or storage disabled. Clear the key so a stale snapshot
-    // isn't restored later as if it were the current state.
+    // Clear the key so a stale snapshot isn't restored as if it were current.
     try {
       storage.removeItem(QUERY_CACHE_STORAGE_KEY);
     } catch {
-      // Storage is unavailable entirely; nothing further to do.
+      // Storage unavailable.
     }
     return false;
   }
 };
 
 /**
- * Restores a snapshot into `queryClient`. Call before rendering so the first
- * paint already has data.
+ * Restores a snapshot into `queryClient`. Must run before the first render, so
+ * the first paint already has data.
  *
- * Restored queries are marked stale so each refetches as soon as its page
- * mounts: the SSE stream was not running while the app was closed and the
- * broadcaster keeps no buffer, so anything that happened in between was missed.
- * Without that, a snapshot younger than the query's staleTime would sit there
- * unrefreshed. Hence: previous state instantly, live data as soon as GitHub
- * answers.
+ * Restored queries are marked stale so each refetches as its page mounts: the
+ * stream was not running while the app was closed and the broadcaster keeps no
+ * buffer, so a snapshot can never be assumed current.
  */
 export const restoreQueryCache = (
   queryClient: QueryClient,
@@ -132,7 +111,7 @@ export const restoreQueryCache = (
     try {
       storage.removeItem(QUERY_CACHE_STORAGE_KEY);
     } catch {
-      // Ignore: an unreadable storage can't be cleaned up either.
+      // Storage unavailable.
     }
   };
 
@@ -167,16 +146,15 @@ export const restoreQueryCache = (
 };
 
 /**
- * Drops the snapshot. Used on logout: queryClient.clear() empties the in-memory
- * cache, but the page navigates away before the debounced write can mirror
- * that, which would leave the previous session's data to be restored for
- * whoever signs in next.
+ * Drops the snapshot. Logout must call this: queryClient.clear() empties only
+ * the in-memory cache, and the snapshot outlives the page — it would be
+ * restored for whoever signs in next.
  */
 export const clearQueryCacheSnapshot = (storage: StorageLike): void => {
   try {
     storage.removeItem(QUERY_CACHE_STORAGE_KEY);
   } catch {
-    // Storage unavailable; nothing to clear.
+    // Storage unavailable.
   }
 };
 
@@ -188,11 +166,10 @@ export interface QueryCachePersistence {
 }
 
 /**
- * Keeps the stored snapshot in step with the cache: a trailing-debounced write
- * on cache changes, plus an immediate one as the page goes away — a mobile
- * browser can kill a backgrounded tab without another turn of the event loop,
- * and a reload can beat the debounce. Those are exactly the cases this whole
- * module exists for.
+ * Keeps the stored snapshot in step with the cache: a debounced write on cache
+ * changes, and an immediate one as the page goes away — a backgrounded tab can
+ * be killed without another turn of the event loop, and a reload can beat the
+ * debounce.
  */
 export const startPersistingQueryCache = (
   queryClient: QueryClient,
@@ -210,7 +187,7 @@ export const startPersistingQueryCache = (
   };
 
   const schedule = () => {
-    if (timer) return; // Trailing debounce: the pending write picks up later changes too.
+    if (timer) return;
     timer = setTimeout(() => {
       timer = undefined;
       saveQueryCache(queryClient, storage);

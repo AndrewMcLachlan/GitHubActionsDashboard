@@ -18,8 +18,8 @@ export const useWorkflowRuns = (owner: string, repo: string, workflowId: number,
       return result.data;
     },
     refetchOnWindowFocus: false,
-    // Branch filters are part of the key, so keep the previous runs on screen
-    // while the filtered set loads rather than collapsing the drill-down.
+    // Branch filters are part of the query key: without this the drill-down
+    // collapses while the filtered runs load.
     placeholderData: keepPreviousData,
     // SSE drives freshness; polling is a safety net for missed events.
     refetchInterval: 1000 * 60 * 10, // 10 minutes

@@ -11,9 +11,6 @@ export const Overview = () => {
     return <p>Error loading build info.</p>;
   }
 
-  // Cached data — restored from the last visit, or kept from the previous filter
-  // — renders while the refetch happens behind it, so the spinner is only for a
-  // genuinely cold start with nothing to show.
   const showSpinner = isLoading && !repositories;
 
   const sorted = [...(repositories ?? [])].sort((a, b) => a.name.localeCompare(b.name));

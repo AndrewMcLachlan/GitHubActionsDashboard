@@ -120,10 +120,8 @@ export const useWorkflows = () => {
     // Status filtering reshapes the fetched data without a refetch, so it is a
     // select rather than part of the query key.
     select: (data) => filterByStatus(data, statusFilter),
-    // Changing the branch filter (or the repo selection) is a new query key, and
-    // therefore a cache entry with no data — which would drop the dashboard back
-    // to a spinner every time a filter is touched. Keep rendering the previous
-    // result until the new one arrives.
+    // The filters are part of the query key, so every filter change lands on an
+    // empty cache entry: without this the dashboard blanks while it refetches.
     placeholderData: keepPreviousData,
     // Matches usePullRequests. Workflow runs are not cached server-side (only the
     // workflow definitions are), so each fetch costs a GitHub call per selected
